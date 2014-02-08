@@ -1,7 +1,9 @@
 __author__ = 'gabe'
 
+import stockroles
+
 def rolePicker(playerCount):
-    availableRoles = list(stockRoles.rolesDict.keys())
+    availableRoles = list(stockroles.rolesDict.keys())
     availableRoles = sorted(availableRoles)
     roleList = []
     while len(roleList) != playerCount:
@@ -63,3 +65,4 @@ def nightDeathMessage(listOfDead, reveal):
                 print(i.name)
     else:
         print("There were no deaths this night")
+    print(":::::::::::::::::::::::::::::::::::")

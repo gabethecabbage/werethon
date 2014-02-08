@@ -1,6 +1,6 @@
 __author__ = 'gabe'
 import cmdinterface
-import inspect
+import time
 
 class Player(object):
     idCounter = 0
@@ -21,6 +21,8 @@ class Player(object):
 
     def nightTurn(self,playerObjectList):
         pass
+        logLine = "The "+self.roleHR+" ("+self.name+") has no night action."
+        return logLine
 
     def deathAction(self, playerObjectList):
         pass
@@ -39,9 +41,10 @@ class Werewolf(Player):
         self.purpose = "maul"
 
     def nightTurn(self,playerObjectList):
-        playerObjectList=wolfTeamTurn(playerObjectList)
+        logLine = wolfTeamTurn(playerObjectList)
+        return logLine
 
-        return playerObjectList
+
 
 class AlphaWolf(Werewolf):
     def __init__(self, name):
@@ -58,34 +61,40 @@ class SilverWolf(Werewolf):
 class StalkerWolf(Werewolf):
     def __init__(self, name):
         super(StalkerWolf, self).__init__(name, "Stalker Wolf")
-        self.nightActionRank = 3.0
+        self.nightActionRank = 4.0
         self.purpose = "inspect"
 
     def nightTurn(self,playerObjectList):
-        playerObjectList=wolfTeamTurn(playerObjectList)
+        logLine = wolfTeamTurn(playerObjectList)
         targetsList=[]
         for i in playerObjectList:
             if not i.health < 1 and not hasattr(i, "werewolf"):
                 targetsList.append(i)
+
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
         target= cmdinterface.targetSelector(targetsList, msg)
         cmdinterface.givePlayerRoleInfo(self, target, "role")
+        logLine = logLine+"The "+self.roleHR+" ("+self.name+") then chose to "+self.purpose+" the "+target.roleHR+" ("+target.name+")."
+        return logLine
 
 class Succubus(Werewolf):
     def __init__(self, name):
         super(Succubus, self).__init__(name, "Succubus")
-        self.nightActionRank = 4.0
+        self.nightActionRank = 3.0
         self.purpose = "block"
 
     def nightTurn(self,playerObjectList):
-        playerObjectList=wolfTeamTurn(playerObjectList)
+        logLine = wolfTeamTurn(playerObjectList)
         targetsList=[]
         for i in playerObjectList:
             if not i.health < 1 and not hasattr(i, "werewolf"):
                 targetsList.append(i)
+
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
         target= cmdinterface.targetSelector(targetsList, msg)
         target.blocked=1
+        logLine = logLine+"The "+self.roleHR+" ("+self.name+") then chose to "+self.purpose+" the "+target.roleHR+" ("+target.name+")."
+        return logLine
 
 """Additional wolf class functions"""
 def findLiveWereWolves(playerObjectList):
@@ -99,6 +108,7 @@ def findLiveWereWolves(playerObjectList):
     return wolfPlayerNames
 
 def wolfTeamTurn(playerObjectList):
+    logLine = ""
     if Werewolf.attacksRemaining > 0:
         targetsList=[]
         for i in playerObjectList:
@@ -106,21 +116,25 @@ def wolfTeamTurn(playerObjectList):
                 targetsList.append(i)
 
         wolfPlayerNames=findLiveWereWolves(playerObjectList)
-        if len(wolfPlayerNames)== 1:
-            msg="Ask the Werewolf ("+wolfPlayerNames+") who they would like to maul."
-        else:
-            namesString=",".join(wolfPlayerNames)
-            msg="Ask the Werewolves ("+namesString+") who they would like to maul."
+        namesString=",".join(wolfPlayerNames)
+        msg="Ask the Werewolf team ("+namesString+") who they would like to maul."
         target= cmdinterface.targetSelector(targetsList, msg, allowBlank=True)
-        if target != "Nobody":
-            target.attacked = 1
-        Werewolf.attacksRemaining -= 1
 
-    return playerObjectList
+        if target == "Nobody":
+            logLine = "The Werewolf team ("+namesString+") chose to maul no one. Very sneaky, eh? "
+        elif target.guarded == 1:
+            logLine = "The Werewolf team ("+namesString+") tried to maul "+target.roleHR+" ("+target.name+"), but they were protected tonight. "
+        else:
+            target.attacked = 1
+            logLine = "The Werewolf team ("+namesString+") chose to maul "+target.roleHR+" ("+target.name+"). "
+
+        Werewolf.attacksRemaining -= 1
+    return logLine
+
 
 class SerialKiller(Player):
     def __init__(self, name):
-        super(Werewolf, self).__init__(name, "Serial Killer")
+        super(SerialKiller, self).__init__(name, "Serial Killer")
         self.team = "Dark"
         self.nightActionRank = 5.0
         self.purpose = "stab"
@@ -133,6 +147,8 @@ class SerialKiller(Player):
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
         target= cmdinterface.targetSelector(targetsList, msg)
         target.attacked = 1
+        logLine = "The "+self.roleHR+" ("+self.name+") chose to "+self.purpose+" the "+target.roleHR+" ("+target.name+")."
+        returnlogLine
 
 """COMPLETE LATER"""
 class Cupid(Player):
@@ -154,8 +170,11 @@ class Fletcher(Player):
                 targetsList.append(i)
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
         target= cmdinterface.targetSelector(targetsList, msg, allowBlank=True)
-        if target != "Nobody":
+        if target == "Nobody": logLine = "The "+self.roleHR+" ("+self.name+") chose to "+self.purpose+" nobody, how dull..."
+        else:
             target.atWillDayEquip.append(Arrow(target,self))
+            logLine = "The "+self.roleHR+" ("+self.name+") chose to "+self.purpose+" the "+target.roleHR+" ("+target.name+")."
+        return logLine
 
 class Guardian(Player):
     def __init__(self, name):
@@ -189,7 +208,6 @@ class Seer(Player):
         self.purpose = "inspect"
 
     def nightTurn(self,playerObjectList):
-        playerObjectList=wolfTeamTurn(playerObjectList)
         targetsList=[]
         for i in playerObjectList:
             if not i.health < 1 and i.numID != self.numID:
@@ -197,6 +215,8 @@ class Seer(Player):
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
         target= cmdinterface.targetSelector(targetsList, msg)
         cmdinterface.givePlayerRoleInfo(self, target, "role")
+        logLine = "The "+self.roleHR+" ("+self.name+") chose to "+self.purpose+" the "+target.roleHR+" ("+target.name+")."
+        return logLine
 
 """COMPLETE LATER"""
 class Thief(Player):
@@ -225,6 +245,8 @@ class WitchHunter(Player):
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
         target=cmdinterface.targetSelector(targetsList, msg)
         cmdinterface.givePlayerRoleInfo(self, target, "team")
+        logLine = "The "+self.roleHR+" ("+self.name+") chose to "+self.purpose+" the "+target.roleHR+" ("+target.name+")."
+        return logLine
 
 class Elder(Player):
     def __init__(self, name):
@@ -241,8 +263,6 @@ class Hunter(Player):
     def __init__(self, name):
         super(Hunter, self).__init__(name, "Hunter")
         self.team = "Light"
-
-
 
 class Lord(Player):
     def __init__(self, name):
@@ -276,11 +296,38 @@ class WhiteWitch(Player):
         target= cmdinterface.targetSelector(targetsList, msg)
         target.attacked = 0
         target.suicided = 0
+        if target.attacked == 1 or target.suicided == 1:
+            logLine = "The "+self.roleHR+" ("+self.name+") chose to "+self.purpose+" the "+target.roleHR+" ("+target.name+") and saved them from bleeding out."
+        else: logLine = "The "+self.roleHR+" ("+self.name+") chose to "+self.purpose+" the "+target.roleHR+" ("+target.name+") but they were fine."
+        return logLine
 
 rolesDict = {"Alpha Wolf": AlphaWolf, "Beta Wolf": BetaWolf, "Serial Killer": SerialKiller, "Silver Wolf": SilverWolf,
     "Stalker Wolf": StalkerWolf, "Succubus": Succubus, "Cupid": Cupid, "Fletcher": Fletcher, "Guardian": Guardian,
     "Insomniac": Insomniac, "Seer": Seer, "Thief": Thief, "Warlock": Warlock, "Witch Hunter": WitchHunter, "Elder": Elder,
     "Fool": Fool, "Hunter": Hunter, "Lord": Lord, "Silversmith": Silversmith, "Villager": Villager, "White Witch": WhiteWitch}
+"""
+0 Alpha Wolf
+1 Beta Wolf
+2 Cupid
+3 Elder
+4 Fletcher
+5 Fool
+6 Guardian
+7 Hunter
+8 Insomniac
+9 Lord
+10 Seer
+11 Serial Killer
+12 Silver Wolf
+13 Silversmith
+14 Stalker Wolf
+15 Succubus
+16 Thief
+17 Villager
+18 Warlock
+19 White Witch
+20 Witch Hunter
+"""
 
 class Arrow:
     arrowCount = 0
@@ -305,7 +352,3 @@ class Arrow:
         target.health -= 1
         if target.health == 0:
             target.deathAction(playerObjectList)
-
-
-
-
