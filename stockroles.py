@@ -19,15 +19,15 @@ class Player(object):
 
         Player.idCounter += 1
 
-    def nightTurn(self,playerObjectList):
+    def night_turn(self,playerObjectList):
         pass
         logLine = "The "+self.roleHR+" ("+self.name+") has no night action."
         return logLine
 
-    def deathAction(self, playerObjectList):
+    def death_action(self, playerObjectList):
         pass
 
-    def displayCount(self):
+    def display_count(self):
         print("Total Players %d" %Player.playerCount)
 
 """ROLE CLASSES"""
@@ -40,8 +40,8 @@ class Werewolf(Player):
         self.nightActionRank = 2.0
         self.purpose = "maul"
 
-    def nightTurn(self,playerObjectList):
-        logLine = wolfTeamTurn(playerObjectList)
+    def night_turn(self,playerObjectList):
+        logLine = wolf_team_turn(playerObjectList)
         return logLine
 
 
@@ -64,16 +64,16 @@ class StalkerWolf(Werewolf):
         self.nightActionRank = 4.0
         self.purpose = "inspect"
 
-    def nightTurn(self,playerObjectList):
-        logLine = wolfTeamTurn(playerObjectList)
+    def night_turn(self,playerObjectList):
+        logLine = wolf_team_turn(playerObjectList)
         targetsList=[]
         for i in playerObjectList:
             if not i.health < 1 and not hasattr(i, "werewolf"):
                 targetsList.append(i)
 
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
-        target= cmdinterface.targetSelector(targetsList, msg)
-        cmdinterface.givePlayerRoleInfo(self, target, "role")
+        target= cmdinterface.target_selector(targetsList, msg)
+        cmdinterface.give_player_role_info(self, target, "role")
         logLine = logLine+"The "+self.roleHR+" ("+self.name+") then chose to "+self.purpose+" the "+target.roleHR+" ("+target.name+")."
         return logLine
 
@@ -83,21 +83,21 @@ class Succubus(Werewolf):
         self.nightActionRank = 3.0
         self.purpose = "block"
 
-    def nightTurn(self,playerObjectList):
-        logLine = wolfTeamTurn(playerObjectList)
+    def night_turn(self,playerObjectList):
+        logLine = wolf_team_turn(playerObjectList)
         targetsList=[]
         for i in playerObjectList:
             if not i.health < 1 and not hasattr(i, "werewolf"):
                 targetsList.append(i)
 
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
-        target= cmdinterface.targetSelector(targetsList, msg)
+        target= cmdinterface.target_selector(targetsList, msg)
         target.blocked=1
         logLine = logLine+"The "+self.roleHR+" ("+self.name+") then chose to "+self.purpose+" the "+target.roleHR+" ("+target.name+")."
         return logLine
 
 """Additional wolf class functions"""
-def findLiveWereWolves(playerObjectList):
+def find_live_werewolves(playerObjectList):
     wolfList=[]
     wolfCount=0
     wolfPlayerNames=[]
@@ -107,7 +107,7 @@ def findLiveWereWolves(playerObjectList):
 
     return wolfPlayerNames
 
-def wolfTeamTurn(playerObjectList):
+def wolf_team_turn(playerObjectList):
     logLine = ""
     if Werewolf.attacksRemaining > 0:
         targetsList=[]
@@ -115,10 +115,10 @@ def wolfTeamTurn(playerObjectList):
             if not i.health < 1 and not hasattr(i, "werewolf"):
                 targetsList.append(i)
 
-        wolfPlayerNames=findLiveWereWolves(playerObjectList)
+        wolfPlayerNames=find_live_werewolves(playerObjectList)
         namesString=",".join(wolfPlayerNames)
         msg="Ask the Werewolf team ("+namesString+") who they would like to maul."
-        target= cmdinterface.targetSelector(targetsList, msg, allowBlank=True)
+        target= cmdinterface.target_selector(targetsList, msg, allowBlank=True)
 
         if target == "Nobody":
             logLine = "The Werewolf team ("+namesString+") chose to maul no one. Very sneaky, eh? "
@@ -139,16 +139,16 @@ class SerialKiller(Player):
         self.nightActionRank = 5.0
         self.purpose = "stab"
 
-    def nightTurn(self,playerObjectList):
+    def night_turn(self,playerObjectList):
         targetsList=[]
         for i in playerObjectList:
             if not i.health < 1 and i.numID != self.numID:
                 targetsList.append(i)
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
-        target= cmdinterface.targetSelector(targetsList, msg)
+        target= cmdinterface.target_selector(targetsList, msg)
         target.attacked = 1
         logLine = "The "+self.roleHR+" ("+self.name+") chose to "+self.purpose+" the "+target.roleHR+" ("+target.name+")."
-        returnlogLine
+        return logLine
 
 """COMPLETE LATER"""
 class Cupid(Player):
@@ -163,13 +163,13 @@ class Fletcher(Player):
         self.nightActionRank = 10.0
         self.purpose = "bestow an arrow upon"
 
-    def nightTurn(self,playerObjectList):
+    def night_turn(self,playerObjectList):
         targetsList=[]
         for i in playerObjectList:
             if not i.health < 1 and i.numID != self.numID:
                 targetsList.append(i)
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
-        target= cmdinterface.targetSelector(targetsList, msg, allowBlank=True)
+        target= cmdinterface.target_selector(targetsList, msg, allowBlank=True)
         if target == "Nobody": logLine = "The "+self.roleHR+" ("+self.name+") chose to "+self.purpose+" nobody, how dull..."
         else:
             target.atWillDayEquip.append(Arrow(target,self))
@@ -184,14 +184,14 @@ class Guardian(Player):
         self.purpose = "protect"
         self.lastPlayerGuarded = None
 
-    def nightTurn(self,playerObjectList):
+    def night_turn(self,playerObjectList):
         targetsList=[]
         for i in playerObjectList:
             if i.health > 0 and i.numID != self.lastPlayerGuarded:
                 targetsList.append(i)
     #Should they be able to choose no one?
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
-        target= cmdinterface.targetSelector(targetsList, msg)
+        target= cmdinterface.target_selector(targetsList, msg)
         target.guarded = 1
         self.lastPlayerGuarded = target.numID
 
@@ -207,14 +207,14 @@ class Seer(Player):
         self.nightActionRank = 7.0
         self.purpose = "inspect"
 
-    def nightTurn(self,playerObjectList):
+    def night_turn(self,playerObjectList):
         targetsList=[]
         for i in playerObjectList:
             if not i.health < 1 and i.numID != self.numID:
                 targetsList.append(i)
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
-        target= cmdinterface.targetSelector(targetsList, msg)
-        cmdinterface.givePlayerRoleInfo(self, target, "role")
+        target= cmdinterface.target_selector(targetsList, msg)
+        cmdinterface.give_player_role_info(self, target, "role")
         logLine = "The "+self.roleHR+" ("+self.name+") chose to "+self.purpose+" the "+target.roleHR+" ("+target.name+")."
         return logLine
 
@@ -237,14 +237,14 @@ class WitchHunter(Player):
         self.nightActionRank = 9.0
         self.purpose = "inspect"
 
-    def nightTurn(self,playerObjectList):
+    def night_turn(self,playerObjectList):
         targetsList=[]
         for i in playerObjectList:
             if not i.health < 1 and i.numID != self.numID:
                 targetsList.append(i)
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
-        target=cmdinterface.targetSelector(targetsList, msg)
-        cmdinterface.givePlayerRoleInfo(self, target, "team")
+        target=cmdinterface.target_selector(targetsList, msg)
+        cmdinterface.give_player_role_info(self, target, "team")
         logLine = "The "+self.roleHR+" ("+self.name+") chose to "+self.purpose+" the "+target.roleHR+" ("+target.name+")."
         return logLine
 
@@ -286,14 +286,14 @@ class WhiteWitch(Player):
         self.purpose = "save"
         self.nightActionRank = 6.0
 
-    def nightTurn(self,playerObjectList):
+    def night_turn(self,playerObjectList):
         targetsList=[]
         for i in playerObjectList:
             if i.health > 0 and i.numID != self.numID:
                 targetsList.append(i)
     #Should they be able to choose no one?
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
-        target= cmdinterface.targetSelector(targetsList, msg)
+        target= cmdinterface.target_selector(targetsList, msg)
         target.attacked = 0
         target.suicided = 0
         if target.attacked == 1 or target.suicided == 1:
@@ -348,7 +348,7 @@ class Arrow:
     def useEquipment(self,playerObjectList):
         targetsList = self.findTargets(playerObjectList)
         msg="Who did "+self.owner.roleHR+" ("+self.owner.name+") "+self.purpose+"?"
-        target = cmdinterface.targetSelector(targetsList, msg)
+        target = cmdinterface.target_selector(targetsList, msg)
         target.health -= 1
         if target.health == 0:
-            target.deathAction(playerObjectList)
+            target.death_action(playerObjectList)

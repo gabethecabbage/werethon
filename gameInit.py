@@ -5,7 +5,7 @@ import stockroles
 import time
 import cmdinterface
 
-class logManager(object):
+class LogManager(object):
     lineCount = 0
     def __init__(self):
         logFileName = "log/log-%d.txt" %int(time.time())
@@ -15,39 +15,39 @@ class logManager(object):
 
     def addLogLine(self, msg):
         if msg != self.lastMsg:
-            self.f.write(str(logManager.lineCount)+":    "+msg+"\n")
-            logManager.lineCount += 1
+            self.f.write(str(LogManager.lineCount)+":    "+msg+"\n")
+            LogManager.lineCount += 1
         self.lastMsg = msg
 
-def makePlayerList(availableRoles, selectedRoleList, playerCount, playerNameList):
+def make_player_list(availableRoles, selectedRoleList, playerCount, playerNameList):
     playerObjectList = []
     random.shuffle(selectedRoleList)
 
     for i in range(playerCount):
-        playerObjectList.append(makePlayerObjects(selectedRoleList[i], playerNameList[i], availableRoles))
+        playerObjectList.append(make_player_obj(selectedRoleList[i], playerNameList[i], availableRoles))
     return playerObjectList
 
-def makePlayerObjects(roleNum, nickName, availableRoles):
+def make_player_obj(roleNum, nickName, availableRoles):
     roleName = availableRoles[roleNum]
     playerObject = stockroles.rolesDict[roleName](nickName)
     return playerObject
 
-def sortByNightRank(playerObjectList):
+def sort_by_night_rank(playerObjectList):
     playerObjectList.sort(key = lambda x: x.nightActionRank)
 
 
-def nightPhase(logObj, playerObjectList, reveal):
+def night_phase(logObj, playerObjectList, reveal):
     """Cycle through the night turns"""
     logObj.addLogLine("The Night has started")
     logObj.addLogLine(":::::::::::::::::::::")
     stockroles.Werewolf.attacksRemaining = 1
     for i in playerObjectList:
         if i.blocked == 1:
-            cmdinterface.playerInactionMessage(i, "blocked")
+            cmdinterface.player_inaction_message(i, "blocked")
         elif i.health < 1:
-            cmdinterface.playerInactionMessage(i, "dead")
+            cmdinterface.player_inaction_message(i, "dead")
         else:
-            logLine=i.nightTurn(playerObjectList)
+            logLine=i.night_turn(playerObjectList)
         logObj.addLogLine(logLine)
         print(":-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:")
     logObj.addLogLine(":::::::::::::::::::::")
@@ -60,7 +60,7 @@ def nightPhase(logObj, playerObjectList, reveal):
             if i.health < 1:
                 i.deathAction(playerObjectList)
                 diedInTheNight.append(i)
-    cmdinterface.nightDeathMessage(diedInTheNight, reveal)
+    cmdinterface.night_death_message(diedInTheNight, reveal)
 
     """Reset any night only attributes"""
     for i in playerObjectList:
@@ -68,11 +68,11 @@ def nightPhase(logObj, playerObjectList, reveal):
         i.attacked=0
         i.guarded=0
 
-def dayPhase(playerObjectList, reveal):
-    useDayEquip(playerObjectList)
+def day_phase(playerObjectList, reveal):
+    use_day_equip(playerObjectList)
 
 
-def useDayEquip(playerObjectList):
+def use_day_equip(playerObjectList):
     playersWithEquip = ["filler string"]
     while len(playersWithEquip) > 0:
         playersWithEquip = []
@@ -81,16 +81,16 @@ def useDayEquip(playerObjectList):
                 playersWithEquip.append(i)
         if len(playersWithEquip) > 0:
             msg="The following players have equipment. \n Select a player if they use anything (or Nobody to progress to the voting)."
-            target = cmdinterface.targetSelector(playersWithEquip, msg, allowBlank=True)
+            target = cmdinterface.target_selector(playersWithEquip, msg, allowBlank=True)
             if target != "Nobody":
                 print("What equipment did they use?")
-                chosenEquip = cmdinterface.targetSelector(target.atWillDayEquip, ":::::::::")
+                chosenEquip = cmdinterface.target_selector(target.atWillDayEquip, ":::::::::")
                 chosenEquip.useEquipment(playerObjectList)
                 target.atWillDayEquip.remove(chosenEquip)
             else: pass
 
 
-logObj = logManager()
+logObj = LogManager()
 reveal = True
 
 playerCount = 6
@@ -105,18 +105,19 @@ availableRoles = sorted(availableRoles)
 #selectedRoleList, availableRoles = cmdinterface.rolePicker(playerCount)
 
 
-playerObjectList = makePlayerList(availableRoles, selectedRoleList, playerCount, playerNameList)
+playerObjectList = make_player_list(availableRoles, selectedRoleList, playerCount, playerNameList)
 
-sortByNightRank(playerObjectList)
+"""Sort players by their night rank attribute."""
+playerObjectList.sort(key = lambda x: x.nightActionRank)
 
-for obj in playerObjectList: cmdinterface.simplePlayerInfo(obj)
+for obj in playerObjectList: cmdinterface.simple_player_info(obj)
 
 
-nightPhase(logObj, playerObjectList, reveal)
+night_phase(logObj, playerObjectList, reveal)
 
-dayPhase(playerObjectList, reveal)
+day_phase(playerObjectList, reveal)
 
-for obj in playerObjectList: cmdinterface.simplePlayerInfo(obj)
+for obj in playerObjectList: cmdinterface.simple_player_info(obj)
 logObj.f.close()
 
 
