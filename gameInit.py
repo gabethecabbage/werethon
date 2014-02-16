@@ -8,7 +8,7 @@ import cmdinterface
 class logManager(object):
     lineCount = 0
     def __init__(self):
-        logFileName = "log-%d.txt" %int(time.time())
+        logFileName = "log/log-%d.txt" %int(time.time())
         self.f = open(logFileName, 'w')
         self.lastMsg = ""
 
