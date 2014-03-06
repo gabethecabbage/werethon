@@ -27,8 +27,12 @@ class Player(object):
     def death_action(self, playerObjectList):
         pass
 
+    def lynch_action(self, playerObjectList):
+        pass
+
     def display_count(self):
         print("Total Players %d" %Player.playerCount)
+
 
 """ROLE CLASSES"""
 class Werewolf(Player):
@@ -170,7 +174,8 @@ class Fletcher(Player):
                 targetsList.append(i)
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
         target= cmdinterface.target_selector(targetsList, msg, allowBlank=True)
-        if target == "Nobody": logLine = "The "+self.roleHR+" ("+self.name+") chose to "+self.purpose+" nobody, how dull..."
+        if target == "Nobody":
+            logLine = "The "+self.roleHR+" ("+self.name+") chose to "+self.purpose+" nobody, how dull..."
         else:
             target.atWillDayEquip.append(Arrow(target,self))
             logLine = "The "+self.roleHR+" ("+self.name+") chose to "+self.purpose+" the "+target.roleHR+" ("+target.name+")."

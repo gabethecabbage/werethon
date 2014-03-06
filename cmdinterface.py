@@ -66,3 +66,23 @@ def night_death_message(listOfDead, reveal):
     else:
         print("There were no deaths this night")
     print(":::::::::::::::::::::::::::::::::::")
+
+def pick_day_equip_user(playerObjectList):
+        playersWithEquip = []
+        for player in playerObjectList:
+            if len(player.atWillDayEquip) > 0:
+                playersWithEquip.append(player)
+        if len(playersWithEquip) > 0:
+            msg="The following players have equipment. \n Select a player if they use anything (or Nobody to progress to the voting)."
+            target = target_selector(playersWithEquip, msg, allowBlank=True)
+        return target
+
+def use_day_equip(playerObjectList, target):
+        print("What equipment did they use?")
+        chosenEquip = target_selector(target.atWillDayEquip, ":::::::::")
+        chosenEquip.useEquipment(playerObjectList)
+        target.atWillDayEquip.remove(chosenEquip)
+
+def lynching(playerObjectList):
+    for player in playerObjectList:
+        player.lynch_action(playerObjectList)

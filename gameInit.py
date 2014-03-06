@@ -13,7 +13,7 @@ class LogManager(object):
         self.lastMsg = ""
 
 
-    def addLogLine(self, msg):
+    def add_log_line(self, msg):
         if msg != self.lastMsg:
             self.f.write(str(LogManager.lineCount)+":    "+msg+"\n")
             LogManager.lineCount += 1
@@ -38,8 +38,8 @@ def sort_by_night_rank(playerObjectList):
 
 def night_phase(logObj, playerObjectList, reveal):
     """Cycle through the night turns"""
-    logObj.addLogLine("The Night has started")
-    logObj.addLogLine(":::::::::::::::::::::")
+    logObj.add_log_line("The Night has started")
+    logObj.add_log_line(":::::::::::::::::::::")
     stockroles.Werewolf.attacksRemaining = 1
     for i in playerObjectList:
         if i.blocked == 1:
@@ -48,9 +48,9 @@ def night_phase(logObj, playerObjectList, reveal):
             cmdinterface.player_inaction_message(i, "dead")
         else:
             logLine=i.night_turn(playerObjectList)
-        logObj.addLogLine(logLine)
+        logObj.add_log_line(logLine)
         print(":-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:")
-    logObj.addLogLine(":::::::::::::::::::::")
+    logObj.add_log_line(":::::::::::::::::::::")
 
     """Check for Deaths"""
     diedInTheNight = []
@@ -58,7 +58,7 @@ def night_phase(logObj, playerObjectList, reveal):
         if i.attacked >= 1 and i.guarded == 0:
             i.health -= 1
             if i.health < 1:
-                i.deathAction(playerObjectList)
+                i.death_action(playerObjectList)
                 diedInTheNight.append(i)
     cmdinterface.night_death_message(diedInTheNight, reveal)
 
@@ -69,25 +69,10 @@ def night_phase(logObj, playerObjectList, reveal):
         i.guarded=0
 
 def day_phase(playerObjectList, reveal):
-    use_day_equip(playerObjectList)
+    while target != "Nobody":
+        target = cmdinterface.pick_day_equip_user(playerObjectList)
+        if target != "Nobody":cmdinterface.use_day_equip(playerObjectList, target)
 
-
-def use_day_equip(playerObjectList):
-    playersWithEquip = ["filler string"]
-    while len(playersWithEquip) > 0:
-        playersWithEquip = []
-        for i in playerObjectList:
-            if len(i.atWillDayEquip) > 0:
-                playersWithEquip.append(i)
-        if len(playersWithEquip) > 0:
-            msg="The following players have equipment. \n Select a player if they use anything (or Nobody to progress to the voting)."
-            target = cmdinterface.target_selector(playersWithEquip, msg, allowBlank=True)
-            if target != "Nobody":
-                print("What equipment did they use?")
-                chosenEquip = cmdinterface.target_selector(target.atWillDayEquip, ":::::::::")
-                chosenEquip.useEquipment(playerObjectList)
-                target.atWillDayEquip.remove(chosenEquip)
-            else: pass
 
 
 logObj = LogManager()
