@@ -59,8 +59,10 @@ def make_player_obj(roleNum, nickName, availableRoles):
 
 def win_lose_check(playerObjectList, won):
     for plyr in playerObjectList:
-        if plyr.win_lose_logic(playerObjectList) != None:
-            print("Someone has won, this is a thing...")
+        winMeta = plyr.win_lose_logic(playerObjectList)
+        if winMeta != None:
+            print(winMeta)
+            exit()
 
 
 def night_phase(logObj, playerObjectList, reveal):

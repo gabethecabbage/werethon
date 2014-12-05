@@ -61,7 +61,7 @@ class Werewolf(Player):
         winMeta = None
         livePlayers = [i for i in playerObjectList if not i.health == 0]
         if len(find_live_werewolves(playerObjectList)) == len(livePlayers):
-            winMeta = "useful data"
+            winMeta = "The Wolf Team has won by killing all other players! Congratulations, "+self.name+"!"
         return winMeta
 
 
@@ -182,8 +182,8 @@ class SerialKiller(Player):
     def win_lose_logic(self, playerObjectList):
         winMeta = None
         livePlayers = [i for i in playerObjectList if not i.health == 0]
-        if len(livePlayers) == 1:
-            winMeta = "useful data"
+        if self.health == 1 and len(livePlayers) == 1:
+            winMeta = "The "+self.roleHR+" has won by killing all other players! Congratulations, "+self.name+"!"
         return winMeta
 
 """COMPLETE LATER"""
@@ -325,7 +325,7 @@ class Fool(Player):
     def win_lose_logic(self, playerObjectList):
         winMeta = None
         if self.deathInfo['attackCause'] == "lynch":
-            winMeta = "useful data"
+            winMeta = "The "+self.roleHR+" has won by convincing the village to Lynch him! Congratulations, "+self.name+"!"
         return winMeta
 
 
