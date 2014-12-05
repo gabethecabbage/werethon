@@ -57,16 +57,17 @@ def make_player_obj(roleNum, nickName, availableRoles):
     playerObject = stockroles.rolesDict[roleName](nickName)
     return playerObject
 
-def win_lose_check(playerObjectList, won):
+def win_lose_check(playerObjectList):
     livePlayers = [i for i in playerObjectList if not i.health == 0]
     liveDarkTeam = [i for i in livePlayers if i.team == "Dark"]
-    if liveDarkTeam == 0:
+    if len(liveDarkTeam) == 0:
         winMeta = "The Village has won by killing all the Dark forces! Congratulations Village!"
+        return winMeta
     for plyr in playerObjectList:
         winMeta = plyr.win_lose_logic(playerObjectList)
         if winMeta != None:
-            print(winMeta)
-            exit()
+            return winMeta
+    return None
 
 
 def night_phase(logObj, playerObjectList, reveal):
@@ -134,14 +135,25 @@ def lynching(playerObjectList):
             lynchVictim.deathInfo = {'attackerName': "Town", 'attackerRole': "Town", 'attackCause': "lynch"}
 
 def day_night_cycle(logObj, playerObjectList, reveal):
-    won = 0
-    while won == 0:
+    while True:
         night_phase(logObj, playerObjectList, reveal)
-        win_lose_check(playerObjectList, won)
+        winMeta = win_lose_check(playerObjectList)
+        if winMeta != None:
+            break
+
         day_phase(playerObjectList, reveal)
-        win_lose_check(playerObjectList, won)
+        winMeta = win_lose_check(playerObjectList)
+        if winMeta != None:
+            break
+
         lynching(playerObjectList)
-        win_lose_check(playerObjectList, won)
+        winMeta = win_lose_check(playerObjectList)
+        if winMeta != None:
+            break
+
+    return winMeta
+
+
 
 logObj = LogManager()
 reveal = True
@@ -156,8 +168,9 @@ availableRoles = sorted(availableRoles)
 playerObjectList = make_player_list(availableRoles, selectedRoleList, playerCount, playerNameList)
 
 for obj in playerObjectList: cmdinterface.simple_player_info(obj)
-day_night_cycle(logObj, playerObjectList, reveal)
+winMeta = day_night_cycle(logObj, playerObjectList, reveal)
 for obj in playerObjectList: cmdinterface.simple_player_info(obj)
+print(winMeta)
 logObj.f.close()
 
 
