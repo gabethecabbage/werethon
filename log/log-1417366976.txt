@@ -1,0 +1,9 @@
+0:    The Night has started
+1:    :::::::::::::::::::::
+2:    The Werewolf team (Tom,Dowd) chose to maul White Witch (Becca). The Succubus (Tom) then chose to block the Witch Hunter (Andy).
+3:    The Stalker Wolf (Dowd) then chose to inspect the Fletcher (Gabe).
+4:    The White Witch (Becca) chose to save the Fletcher (Gabe) but they were fine.
+5:    Witch Hunter (Andy) may not act tonight, they are blocked
+6:    The Fletcher (Gabe) chose to bestow an arrow upon the Villager (Onslow).
+7:    The Villager (Onslow) has no night action.
+8:    :::::::::::::::::::::

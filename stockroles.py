@@ -12,6 +12,7 @@ class Player(object):
         self.health = 1
         self.atWillDayEquip = []
         self.attacked = 0
+        self.attackInfo = {'attacker': None, 'role': None, 'cause': None}
         self.suicided = 0
         self.blocked = 0
         self.guarded = 0
@@ -25,6 +26,7 @@ class Player(object):
         return logLine
 
     def death_action(self, playerObjectList):
+        self.deathInfo = self.attackInfo
         pass
 
     def lynch_action(self, playerObjectList):
@@ -33,9 +35,16 @@ class Player(object):
     def display_count(self):
         print("Total Players %d" %Player.playerCount)
 
+    def win_lose_logic(self, playerObjectList):
+        pass
+
+
 
 """ROLE CLASSES"""
 class Werewolf(Player):
+    """
+    This role performs attacks at night, they are the first to act and must attack as a gestalt
+    """
     attacksRemaining=0
     def __init__(self, name, roleHR):
         super(Werewolf, self).__init__(name, roleHR)
@@ -48,25 +57,38 @@ class Werewolf(Player):
         logLine = wolf_team_turn(playerObjectList)
         return logLine
 
+    def win_lose_logic(self,playerObjectList):
+        winMeta = None
+        livePlayers = [i for i in playerObjectList if not i.health == 0]
+        if len(find_live_werewolves(playerObjectList)) == len(livePlayers):
+            winMeta = "useful data"
+        return winMeta
+
+
+
 
 
 class AlphaWolf(Werewolf):
     def __init__(self, name):
         super(AlphaWolf, self).__init__(name, "Alpha Werewolf")
+        self.packRank = 1.0
 
 class BetaWolf(Werewolf):
     def __init__(self, name):
         super(BetaWolf, self).__init__(name, "Beta Werewolf")
+        self.packRank = 2.0
 
 class SilverWolf(Werewolf):
     def __init__(self, name):
         super(SilverWolf, self).__init__(name, "Silver Wolf")
+        self.packRank = 10.0
 
 class StalkerWolf(Werewolf):
     def __init__(self, name):
         super(StalkerWolf, self).__init__(name, "Stalker Wolf")
         self.nightActionRank = 4.0
         self.purpose = "inspect"
+        self.packRank = 9.0
 
     def night_turn(self,playerObjectList):
         logLine = wolf_team_turn(playerObjectList)
@@ -76,7 +98,7 @@ class StalkerWolf(Werewolf):
                 targetsList.append(i)
 
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
-        target= cmdinterface.target_selector(targetsList, msg)
+        target=cmdinterface.target_selector(targetsList, msg)
         cmdinterface.give_player_role_info(self, target, "role")
         logLine = logLine+"The "+self.roleHR+" ("+self.name+") then chose to "+self.purpose+" the "+target.roleHR+" ("+target.name+")."
         return logLine
@@ -86,6 +108,7 @@ class Succubus(Werewolf):
         super(Succubus, self).__init__(name, "Succubus")
         self.nightActionRank = 3.0
         self.purpose = "block"
+        self.packRank = 1.0
 
     def night_turn(self,playerObjectList):
         logLine = wolf_team_turn(playerObjectList)
@@ -102,14 +125,13 @@ class Succubus(Werewolf):
 
 """Additional wolf class functions"""
 def find_live_werewolves(playerObjectList):
-    wolfList=[]
-    wolfCount=0
-    wolfPlayerNames=[]
-    for i in playerObjectList:
-        if not i.health<1 and hasattr(i, "werewolf"):
-            wolfPlayerNames.append(i.name)
+    liveWolfPlayers=[]
+    for player in playerObjectList:
+        if not player.health < 1 and hasattr(player, "werewolf"):
+            liveWolfPlayers.append(player)
+    liveWolfPlayers = sorted(liveWolfPlayers, key=lambda wolf: wolf.packRank)
+    return liveWolfPlayers
 
-    return wolfPlayerNames
 
 def wolf_team_turn(playerObjectList):
     logLine = ""
@@ -119,8 +141,8 @@ def wolf_team_turn(playerObjectList):
             if not i.health < 1 and not hasattr(i, "werewolf"):
                 targetsList.append(i)
 
-        wolfPlayerNames=find_live_werewolves(playerObjectList)
-        namesString=",".join(wolfPlayerNames)
+        liveWolfPlayers=find_live_werewolves(playerObjectList)
+        namesString=",".join([n.name for n in liveWolfPlayers])
         msg="Ask the Werewolf team ("+namesString+") who they would like to maul."
         target= cmdinterface.target_selector(targetsList, msg, allowBlank=True)
 
@@ -130,7 +152,9 @@ def wolf_team_turn(playerObjectList):
             logLine = "The Werewolf team ("+namesString+") tried to maul "+target.roleHR+" ("+target.name+"), but they were protected tonight. "
         else:
             target.attacked = 1
+            target.attackInfo = {'attackerName': liveWolfPlayers[-1].name, 'attackerRole': liveWolfPlayers[-1].roleHR, 'attackCause': liveWolfPlayers[-1].purpose}
             logLine = "The Werewolf team ("+namesString+") chose to maul "+target.roleHR+" ("+target.name+"). "
+            logLine = logLine + "The attacker was " + liveWolfPlayers[-1].name
 
         Werewolf.attacksRemaining -= 1
     return logLine
@@ -151,8 +175,16 @@ class SerialKiller(Player):
         msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
         target= cmdinterface.target_selector(targetsList, msg)
         target.attacked = 1
+        target.attackInfo = {'attackerName': self.name, 'attackerRole': self.roleHR, 'attackCause': self.purpose}
         logLine = "The "+self.roleHR+" ("+self.name+") chose to "+self.purpose+" the "+target.roleHR+" ("+target.name+")."
         return logLine
+
+    def win_lose_logic(self, playerObjectList):
+        winMeta = None
+        livePlayers = [i for i in playerObjectList if not i.health == 0]
+        if len(livePlayers) == 1:
+            winMeta = "useful data"
+        return winMeta
 
 """COMPLETE LATER"""
 class Cupid(Player):
@@ -228,6 +260,25 @@ class Thief(Player):
     def __init__(self, name):
         super(Thief, self).__init__(name, "Thief")
         self.team = "Light"
+        self.purpose = "steal the role of"
+
+    def night_turn(self,playerObjectList):
+        targetsList=[]
+        for i in playerObjectList:
+            if not i.health < 1 and i.numID != self.numID:
+                targetsList.append(i)
+        msg="Ask the "+self.roleHR+" ("+self.name+") who they would like to "+self.purpose+"."
+        target= cmdinterface.target_selector(targetsList, msg, allowBlank=True)
+
+        if target == "Nobody":
+            logLine = "The "+self.roleHR+" ("+self.name+") chose to "+self.purpose+" nobody, how dull..."
+
+        elif target.team == "Dark" or target.role == "Silversmith":
+            self.attacked = 1
+            logLine = "The "+self.roleHR+" ("+self.name+") was killed trying to "+self.purpose+" the "+target.roleHR+" ("+target.name+")."
+
+
+        return logLine
 
 """COMPLETE LATER"""
 class Warlock(Player):
@@ -259,21 +310,50 @@ class Elder(Player):
         self.team = "Light"
         self.health += 1
 
+    def death_action(self, playerObjectList, cause):
+        if cause == "Lynched":
+            for i in playerObjectList:
+                if i.team != "Dark":
+                    i.blocked = 1
+
+"""COMPLETE LATER"""
 class Fool(Player):
     def __init__(self, name):
         super(Fool, self).__init__(name, "Fool")
         self.team = "Light"
+
+    def win_lose_logic(self, playerObjectList):
+        winMeta = None
+        if self.deathInfo['attackCause'] == "lynch":
+            winMeta = "useful data"
+        return winMeta
+
 
 class Hunter(Player):
     def __init__(self, name):
         super(Hunter, self).__init__(name, "Hunter")
         self.team = "Light"
 
+    def death_action(self, playerObjectList, cause):
+        """On death, hunter gives self arrow and uses it"""
+        self.atWillDayEquip.append(Arrow(self,self))
+        self.atWillDayEquip.arrow.useEquipment(playerObjectList)
+        self.atWillDayEquip.remove(Arrow)
+
 class Lord(Player):
     def __init__(self, name):
         super(Lord, self).__init__(name, "Lord")
         self.team = "Light"
+        self.veto = 1
 
+    def lynch_action(self, playerObjectList):
+       msg="Did the "+self.roleHR+" ("+self.name+") use there lynching veto this round?"
+       if self.veto == 1:
+            if cmdinterface.boolean_selector((yes,no), msg) == yes:
+                self.veto == 0
+
+
+"""COMPLETE LATER"""
 class Silversmith(Player):
     def __init__(self, name):
         super(Silversmith, self).__init__(name, "Silversmith")
@@ -334,6 +414,7 @@ rolesDict = {"Alpha Wolf": AlphaWolf, "Beta Wolf": BetaWolf, "Serial Killer": Se
 20 Witch Hunter
 """
 
+"""Equipment Classes"""
 class Arrow:
     arrowCount = 0
     def __init__(self, owner, donor):
@@ -350,10 +431,11 @@ class Arrow:
                 targetsList.append(i)
         return targetsList
 
-    def useEquipment(self,playerObjectList):
+    def useEquipment(self, playerObjectList):
         targetsList = self.findTargets(playerObjectList)
-        msg="Who did "+self.owner.roleHR+" ("+self.owner.name+") "+self.purpose+"?"
+        msg="Who did the "+self.owner.roleHR+" ("+self.owner.name+") "+self.purpose+"?"
         target = cmdinterface.target_selector(targetsList, msg)
         target.health -= 1
         if target.health == 0:
-            target.death_action(playerObjectList)
+            target.death_action(playerObjectList, self.name)
+            target.deathInfo = {'attackerName': self.owner.name, 'attackerRole': self.owner.roleHR, 'attackCause': self.purpose}

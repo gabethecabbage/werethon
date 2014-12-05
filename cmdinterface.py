@@ -45,6 +45,17 @@ def target_selector(targetsList, msg=":::::::::", allowBlank=False):
     t=int(input("Select the corresponding number: "))
     return targetsList[t]
 
+def boolean_selector(boolList, msg=":::::::::"):
+    """Asks for the user to pick one of two values e.g. true/false, yes/no, poop/pee, you decide!"""
+    i = 0
+    while i != 1:
+        print(msg)
+        ans = input("(" + boolList[0] + " or " + boolList[1] + "?) :")
+        if ans != boolList[0] or ans != boolList[1]: print("That's not an option you tit!")
+        else: i = 1
+
+    return ans
+
 def give_player_role_info(player, target, infoType):
     if infoType == "role":
         print("You may show the "+player.roleHR+" ("+player.name+") that "+target.name+" is a "+target.roleHR+".")
@@ -53,7 +64,9 @@ def give_player_role_info(player, target, infoType):
         print("You may show the "+player.roleHR+" ("+player.name+") that "+target.name+" is a "+target.team+" team member.")
 
 def player_inaction_message(player, cause):
-    print(player.roleHR+" ("+player.name+") may not act tonight, they are "+cause)
+    msg = player.roleHR+" ("+player.name+") may not act tonight, they are "+cause
+    print(msg)
+    return msg
 
 def night_death_message(listOfDead, reveal):
     if len(listOfDead) > 0:
@@ -73,16 +86,14 @@ def pick_day_equip_user(playerObjectList):
             if len(player.atWillDayEquip) > 0:
                 playersWithEquip.append(player)
         if len(playersWithEquip) > 0:
-            msg="The following players have equipment. \n Select a player if they use anything (or Nobody to progress to the voting)."
-            target = target_selector(playersWithEquip, msg, allowBlank=True)
-        return target
+            msg="The following players have equipment. \nSelect a player if they use anything (or Nobody to progress to the voting)."
+            equipUser = target_selector(playersWithEquip, msg, allowBlank=True)
+            return equipUser
+        else:
+            return "Nobody"
 
-def use_day_equip(playerObjectList, target):
+def use_day_equip(playerObjectList, equipUser):
         print("What equipment did they use?")
-        chosenEquip = target_selector(target.atWillDayEquip, ":::::::::")
+        chosenEquip = target_selector(equipUser.atWillDayEquip, ":::::::::")
         chosenEquip.useEquipment(playerObjectList)
-        target.atWillDayEquip.remove(chosenEquip)
-
-def lynching(playerObjectList):
-    for player in playerObjectList:
-        player.lynch_action(playerObjectList)
+        equipUser.atWillDayEquip.remove(chosenEquip)
