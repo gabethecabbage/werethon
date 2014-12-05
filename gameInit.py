@@ -172,6 +172,6 @@ winMeta = day_night_cycle(logObj, playerObjectList, reveal)
 for obj in playerObjectList: cmdinterface.simple_player_info(obj)
 print(winMeta)
 logObj.f.close()
-
+print("End of script")
 
 
