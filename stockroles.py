@@ -12,7 +12,8 @@ class Player(object):
         self.health = 1
         self.atWillDayEquip = []
         self.attacked = 0
-        self.attackInfo = {'attacker': None, 'role': None, 'cause': None}
+        self.attackInfo = {'attackerName': None, 'attackerRole': None, 'attackCause': None}
+        self.deathInfo = {'attackerName': None, 'attackerRole': None, 'attackCause': None}
         self.suicided = 0
         self.blocked = 0
         self.guarded = 0
@@ -25,7 +26,7 @@ class Player(object):
         logLine = "The "+self.roleHR+" ("+self.name+") has no night action."
         return logLine
 
-    def death_action(self, playerObjectList):
+    def death_action(self, playerObjectList, cause):
         self.deathInfo = self.attackInfo
         pass
 
@@ -316,7 +317,6 @@ class Elder(Player):
                 if i.team != "Dark":
                     i.blocked = 1
 
-"""COMPLETE LATER"""
 class Fool(Player):
     def __init__(self, name):
         super(Fool, self).__init__(name, "Fool")

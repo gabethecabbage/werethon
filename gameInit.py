@@ -58,6 +58,10 @@ def make_player_obj(roleNum, nickName, availableRoles):
     return playerObject
 
 def win_lose_check(playerObjectList, won):
+    livePlayers = [i for i in playerObjectList if not i.health == 0]
+    liveDarkTeam = [i for i in livePlayers if i.team == "Dark"]
+    if liveDarkTeam == 0:
+        winMeta = "The Village has won by killing all the Dark forces! Congratulations Village!"
     for plyr in playerObjectList:
         winMeta = plyr.win_lose_logic(playerObjectList)
         if winMeta != None:
@@ -106,11 +110,13 @@ def night_phase(logObj, playerObjectList, reveal):
 def day_phase(playerObjectList, reveal):
     diedInTheDay = []
     equipUser = None
+    livePlayers=[i for i in playerObjectList if not i.health == 0]
 
     while equipUser != "Nobody":
-        equipUser = cmdinterface.pick_day_equip_user(playerObjectList)
+        equipUser = cmdinterface.pick_day_equip_user(livePlayers)
         if equipUser != "Nobody":
-            cmdinterface.use_day_equip(playerObjectList, equipUser)
+            cmdinterface.use_day_equip(livePlayers, equipUser)
+            livePlayers=[i for i in playerObjectList if not i.health == 0]
 
 def lynching(playerObjectList):
     lynchablePlayers = []
@@ -121,10 +127,11 @@ def lynching(playerObjectList):
             lynchablePlayers.append(player)
 
     lynchVictim = cmdinterface.target_selector(lynchablePlayers, "Select the player the group voted to lynch.", True)
-    lynchVictim.health -= 1
-    if lynchVictim.health < 1:
-        lynchVictim.death_action(playerObjectList, "lynch")
-        lynchVictim.deathInfo = {'attackerName': "Town", 'attackerRole': "Town", 'attackCause': "lynch"}
+    if lynchVictim != "Nobody":
+        lynchVictim.health -= 1
+        if lynchVictim.health < 1:
+            lynchVictim.death_action(playerObjectList, "lynch")
+            lynchVictim.deathInfo = {'attackerName': "Town", 'attackerRole': "Town", 'attackCause': "lynch"}
 
 def day_night_cycle(logObj, playerObjectList, reveal):
     won = 0
@@ -141,7 +148,7 @@ reveal = True
 
 playerCount = 6
 playerNameList = ["Gabe","Dowd","Tom","Becca","Onslow","Andy"]
-selectedRoleList=[14, 15, 17, 19, 20, 4]
+selectedRoleList=[14, 15, 5, 19, 20, 4]
 availableRoles = list(stockroles.rolesDict.keys())
 availableRoles = sorted(availableRoles)
 
