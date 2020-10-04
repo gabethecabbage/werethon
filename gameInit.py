@@ -1,5 +1,5 @@
 #! /usr/bin/python
-__author__ = 'gabe'
+__author__ = "gabe"
 
 import random
 import stockroles
@@ -7,171 +7,183 @@ import time
 import cmdinterface
 import copy
 
+
 def main():
-    logObj = LogManager()
+    log = LogManager()
     reveal = True
 
-    availableRoles = list(stockroles.rolesDict.keys())
-    availableRoles = sorted(availableRoles)
+    all_role_names = list(stockroles.roles_lookup.keys())
+    all_role_names = sorted(all_role_names)
 
-    playerCount = int(input("Enter number of players: "))
-    playerNameList = cmdinterface.playerNameEntry(playerCount)
-    selectedRoleList, availableRoles = cmdinterface.rolePicker(playerCount)
-    playerObjectList = make_player_list(availableRoles, selectedRoleList, playerCount, playerNameList)
+    player_count = int(input("Enter number of players: "))
+    player_names = cmdinterface.playerNameEntry(player_count)
+    role_names, all_role_names = cmdinterface.rolePicker(player_count)
+    players = make_player_list(all_role_names, role_names, player_count, player_names)
 
-    for obj in playerObjectList: cmdinterface.simple_player_info(obj)
-    day_night_cycle(logObj, playerObjectList, reveal)
-    for obj in playerObjectList: cmdinterface.simple_player_info(obj)
-    logObj.f.close()
+    for obj in players:
+        cmdinterface.simple_player_info(obj)
+    day_night_cycle(log, players, reveal)
+    for obj in players:
+        cmdinterface.simple_player_info(obj)
+    log.f.close()
 
 
 class LogManager(object):
-    lineCount = 0
-    def __init__(self):
-        logFileName = "log/log-%d.txt" %int(time.time())
-        """create a log file in the log directory with a file name appended with the current unix time"""
-        self.f = open(logFileName, 'w')
-        self.lastMsg = "" #this string stores the last know log entry in the object, part of the ugly hack below
+    line_count = 0
 
+    def __init__(self):
+        log_file_name = "log/log-%d.txt" % int(time.time())
+        """create a log file in the log directory with a file name appended
+        with the current unix time"""
+        self.f = open(log_file_name, "w")
 
     def add_log_line(self, msg):
-        if msg != self.lastMsg: #check log item isn't same as last
-            """this is a nasty hack to stop a duplication issue in the log I couldn't be bothered to debug"""
-            self.f.write(str(LogManager.lineCount)+":    "+msg+"\n") #write log message
-            LogManager.lineCount += 1 #roll over to next line of log
+        self.f.write(str(LogManager.line_count) + ":    " + msg + "\n")
+        LogManager.line_count += 1
         self.lastMsg = msg
 
-"""Makes a list to store player objects and the shuffles the order to keep play to role assignment random"""
-def make_player_list(availableRoles, selectedRoleList, playerCount, playerNameList):
-    playerObjectList = []
-    random.shuffle(selectedRoleList)
 
-    for i in range(playerCount): #creates each player in a loop
-        playerObjectList.append(make_player_obj(selectedRoleList[i], playerNameList[i], availableRoles))
-    """Sort players by their night rank attribute. This determins the order they act in the night"""
-    playerObjectList.sort(key=lambda x: x.nightActionRank)
-    return playerObjectList
+def make_player_list(all_role_names, role_names, player_count, player_names):
+    """Maps Players to shuffled list of role names"""
+    players = []
+    random.shuffle(role_names)
 
-def make_player_obj(roleNum, nickName, availableRoles):
-    roleName = availableRoles[roleNum]
-    playerObject = stockroles.rolesDict[roleName](nickName)
-    return playerObject
+    for i in range(player_count):
+        players.append(make_player_obj(role_names[i], player_names[i], all_role_names))
+    """Sort players by their night rank attribute"""
+    players.sort(key=lambda x: x.night_action_rank)
+    return players
 
-def win_lose_check(playerObjectList):
-    livePlayers = [i for i in playerObjectList if not i.health == 0]
-    liveDarkTeam = [i for i in livePlayers if i.team == "Dark"]
-    if len(liveDarkTeam) == 0:
-        winMeta = "The Village has won by killing all the Dark forces! Congratulations Village!"
-        return winMeta
-    for plyr in playerObjectList:
-        winMeta = plyr.win_lose_logic(playerObjectList)
-        if winMeta != None:
-            return winMeta
+
+def make_player_obj(role_num, nickname, all_role_names):
+    role_name = all_role_names[role_num]
+    player = stockroles.roles_lookup[role_name](nickname)
+    return player
+
+
+def win_lose_check(players):
+    live_players = [i for i in players if not i.health == 0]
+    live_dark_team = [i for i in live_players if i.team == "Dark"]
+    if len(live_dark_team) == 0:
+        win_meta = "The Village has won by killing all the Dark forces!"
+        return win_meta
+    for plyr in players:
+        win_meta = plyr.win_lose_logic(players)
+        if win_meta is not None:
+            return win_meta
     return None
 
 
-def night_phase(logObj, playerObjectList, reveal):
+def night_phase(log, players, reveal):
     """Cycle through the night turns"""
-    logObj.add_log_line("The Night has started")
-    logObj.add_log_line(":::::::::::::::::::::")
-    stockroles.Werewolf.attacksRemaining = 1 #gives the werewolf objects all one joint attack
+    log.add_log_line("The Night has started")
+    log.add_log_line(":::::::::::::::::::::")
+    stockroles.Werewolf.attacksRemaining = 1
     """for each player, run there night turn"""
-    for i in playerObjectList:
-        #checks the player can use there night turn function before running it
+    for i in players:
+        """checks the player can use their night turn"""
         if i.blocked == 1:
-            logLine = cmdinterface.player_inaction_message(i, "blocked")
+            log_line = cmdinterface.player_inaction_message(i, "blocked")
         elif i.health < 1:
-            logLine = cmdinterface.player_inaction_message(i, "dead")
+            log_line = cmdinterface.player_inaction_message(i, "dead")
         else:
-            logLine = i.night_turn(playerObjectList)
-        logObj.add_log_line(logLine)
+            log_line = i.night_turn(players)
+        log.add_log_line(log_line)
         print(":-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:")
-    logObj.add_log_line(":::::::::::::::::::::")
+    log.add_log_line(":::::::::::::::::::::")
 
     """Check for Deaths"""
-    diedInTheNight = []
-    for plyr in playerObjectList:
+    died_in_the_night = []
+    for plyr in players:
         if plyr.attacked >= 1 and plyr.guarded == 0:
             plyr.health -= 1
-            #dock 1 hp per unguarded attack
+            """dock 1 hp per unguarded attack"""
             if plyr.health < 1:
-                plyr.death_action(playerObjectList, "Night Attack")
-                plyr.deathInfo = copy.deepcopy(plyr.attackInfo)
-                diedInTheNight.append(plyr)
-    #returns a list of the dead and bool of the reveal rule
-    cmdinterface.night_death_message(diedInTheNight, reveal)
+                plyr.death_action(players, "Night Attack")
+                plyr.death_info = copy.deepcopy(plyr.attack_info)
+                died_in_the_night.append(plyr)
+    """returns a list of the dead and bool of the reveal rule"""
+    cmdinterface.night_death_message(died_in_the_night, reveal)
 
-    """Reset any night only attributes, these properties currently cant travel over day-night cycles"""
-    for plyr in playerObjectList:
+    """Reset any night only attributes"""
+    for plyr in players:
         plyr.blocked = 0
         plyr.attacked = 0
         plyr.guarded = 0
-        plyr.attackInfo = None
+        plyr.attack_info = None
 
-def day_phase(playerObjectList, reveal):
-    diedInTheDay = []
-    equipUser = None
-    livePlayers=[i for i in playerObjectList if not i.health == 0]
 
-    while equipUser != "Nobody":
-        equipUser = cmdinterface.pick_day_equip_user(livePlayers)
-        if equipUser != "Nobody":
-            cmdinterface.use_day_equip(livePlayers, equipUser)
-            livePlayers=[i for i in playerObjectList if not i.health == 0]
+def day_phase(players, reveal):
+    died_in_the_day = []
+    equip_user = None
+    live_players = [i for i in players if not i.health == 0]
 
-def lynching(playerObjectList):
-    lynchablePlayers = []
+    while equip_user != "Nobody":
+        equip_user = cmdinterface.pick_day_equip_user(live_players)
+        if equip_user != "Nobody":
+            cmdinterface.use_day_equip(live_players, equip_user)
+            live_players = [i for i in players if not i.health == 0]
 
-    for player in playerObjectList:
+
+def hanging(players):
+    hangable_players = []
+
+    for player in players:
         if player.health > 0:
-            player.lynch_action(playerObjectList)
-            lynchablePlayers.append(player)
+            player.hang_action(players)
+            hangable_players.append(player)
 
-    lynchVictim = cmdinterface.target_selector(lynchablePlayers, "Select the player the group voted to lynch.", True)
-    if lynchVictim != "Nobody":
-        lynchVictim.health -= 1
-        if lynchVictim.health < 1:
-            lynchVictim.death_action(playerObjectList, "lynch")
-            lynchVictim.deathInfo = {'attackerName': "Town", 'attackerRole': "Town", 'attackCause': "lynch"}
+    hang_msg = "Select the player the group voted to hang."
+    hang_victim = cmdinterface.target_selector(hangable_players, hang_msg, True)
+    if hang_victim != "Nobody":
+        hang_victim.health -= 1
+        if hang_victim.health < 1:
+            hang_victim.death_action(players, "hang")
+            hang_victim.death_info = {
+                "attacker_name": "Town",
+                "attacker_role": "Town",
+                "attack_cause": "hang",
+            }
 
-def day_night_cycle(logObj, playerObjectList, reveal):
+
+def day_night_cycle(log, players, reveal):
     while True:
-        night_phase(logObj, playerObjectList, reveal)
-        winMeta = win_lose_check(playerObjectList)
-        if winMeta != None:
+        night_phase(log, players, reveal)
+        win_meta = win_lose_check(players)
+        if win_meta is not None:
             break
 
-        day_phase(playerObjectList, reveal)
-        winMeta = win_lose_check(playerObjectList)
-        if winMeta != None:
+        day_phase(players, reveal)
+        win_meta = win_lose_check(players)
+        if win_meta is not None:
             break
 
-        lynching(playerObjectList)
-        winMeta = win_lose_check(playerObjectList)
-        if winMeta != None:
+        hanging(players)
+        win_meta = win_lose_check(players)
+        if win_meta is not None:
             break
 
-    return winMeta
+    return win_meta
 
 
-
-logObj = LogManager()
+log = LogManager()
 reveal = True
 
-playerCount = 6
-playerNameList = ["Gabe","Dowd","Tom","Becca","Onslow","Andy"]
-selectedRoleList=[14, 15, 5, 19, 20, 4]
-availableRoles = list(stockroles.rolesDict.keys())
-availableRoles = sorted(availableRoles)
+player_count = 6
+player_names = ["Gabe", "Dowd", "Tom", "Becca", "Onslow", "Andy"]
+print(stockroles.roles_lookup)
+role_names = [0, 1, 5, 5, 5, 5]
+all_role_names = list(stockroles.roles_lookup.keys())
+all_role_names = sorted(all_role_names)
 
 
-playerObjectList = make_player_list(availableRoles, selectedRoleList, playerCount, playerNameList)
+players = make_player_list(all_role_names, role_names, player_count, player_names)
 
-for obj in playerObjectList: cmdinterface.simple_player_info(obj)
-winMeta = day_night_cycle(logObj, playerObjectList, reveal)
-for obj in playerObjectList: cmdinterface.simple_player_info(obj)
-print(winMeta)
-logObj.f.close()
+for obj in players:
+    cmdinterface.simple_player_info(obj)
+win_meta = day_night_cycle(log, players, reveal)
+for obj in players:
+    cmdinterface.simple_player_info(obj)
+print(win_meta)
+log.f.close()
 print("End of script")
-
-
