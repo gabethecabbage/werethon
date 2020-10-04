@@ -69,14 +69,14 @@ class Werewolf(Player):
         return log_line
 
     def win_lose_logic(self, players):
-        win_meta = None
+        end_state = None
         livePlayers = [i for i in players if not i.health == 0]
         if len(find_live_werewolves(players)) == len(livePlayers):
-            win_meta = (
+            end_state = (
                 f"The Wolf Team has won by killing all other players!"
                 f"Congratulations, {self.name}!"
             )
-        return win_meta
+        return end_state
 
 
 class AlphaWolf(Werewolf):
@@ -206,13 +206,13 @@ class Fool(Player):
         self.team = "Light"
 
     def win_lose_logic(self, players):
-        win_meta = None
+        end_state = None
         if self.death_info["attack_cause"] == "hang":
-            win_meta = (
+            end_state = (
                 f"The {self.role_hr} has won by convincing the village"
                 f" to Lynch him! Congratulations, {self.name}!"
             )
-        return win_meta
+        return end_state
 
 
 class Hunter(Player):

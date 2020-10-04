@@ -2,7 +2,7 @@ __author__ = "gabe"
 
 import stockroles
 
-
+"""DROPPED
 def role_picker(player_count):
     all_role_names = list(stockroles.roles_lookup.keys())
     all_role_names = sorted(all_role_names)
@@ -28,7 +28,7 @@ def player_name_entry(player_count):
             print("Your player count does not match the number of nick names")
 
     return player_names
-
+"""
 
 def simple_player_info(playerObj):
     print("Nickname: %s" % playerObj.name)

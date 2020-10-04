@@ -35,15 +35,15 @@ class SerialKiller(Player):
         return log_line
 
     def win_lose_logic(self, players):
-        win_meta = None
+        end_state = None
         livePlayers = [i for i in players if not i.health == 0]
         if self.health == 1 and len(livePlayers) == 1:
-            win_meta = (
+            end_state = (
                 f"The {self.role_hr} has won by killing all players!"
                 f"Congratulations, {self.name}!"
             )
 
-        return win_meta
+        return end_state
 
 
 extra_roles_lookup = {"Serial Killer": SerialKiller}
