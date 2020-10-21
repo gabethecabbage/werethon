@@ -30,6 +30,7 @@ def player_name_entry(player_count):
     return player_names
 """
 
+
 def simple_player_info(playerObj):
     print("Nickname: %s" % playerObj.name)
     print("Role: %s" % playerObj.role_hr)
@@ -67,13 +68,13 @@ def give_player_role_info(player, target, infoType):
     if infoType == "role":
         msg = (
             f"You may show the {player.role_hr} ({player.name}) that"
-            "{target.name} is a {target.role_hr}"
+            f" {target.name} is a {target.role_hr}"
         )
 
     if infoType == "team":
         msg = (
             f"You may show the {player.role_hr} ({player.name}) that"
-            "{target.name} is a {target.team} team member"
+            f" {target.name} is a {target.team} team member"
         )
     print(msg)
     return msg
@@ -101,7 +102,7 @@ def night_death_message(listOfDead, reveal):
 def pick_day_equip_user(players):
     equip_players = []
     for player in players:
-        if len(player.at_will_day_equip) > 0:
+        if len(player.at_will_day_equip) > 0 and player.health > 0:
             equip_players.append(player)
     if len(equip_players) > 0:
         msg = (
@@ -109,7 +110,7 @@ def pick_day_equip_user(players):
             "Select a player if they use anything"
             "(or Nobody to progress to the voting)."
         )
-        equip_user = target_selector(equip_players, msg, names_string=True)
+        equip_user = target_selector(equip_players, msg, True)
         return equip_user
     else:
         return "Nobody"
@@ -118,5 +119,5 @@ def pick_day_equip_user(players):
 def use_day_equip(players, equip_user):
     print("What equipment did they use?")
     chosenEquip = target_selector(equip_user.at_will_day_equip, ":::::::::")
-    chosenEquip.useEquipment(players)
+    chosenEquip.use_equipment()
     equip_user.at_will_day_equip.remove(chosenEquip)

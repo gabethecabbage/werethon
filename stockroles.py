@@ -6,10 +6,11 @@ class Player(object):
     id_counter = 0
     """Common base class for all players"""
 
-    def __init__(self, name, role):
+    def __init__(self, game, name, role):
+        self.game = game
         self.name = name
         self.role_hr = role
-        self.num_id = Player.id_counter
+        self.id = Player.id_counter
         self.health = 1
         self.at_will_day_equip = []
         self.attacked = 0
@@ -30,22 +31,21 @@ class Player(object):
 
         Player.id_counter += 1
 
-    def night_turn(self, players):
-        pass
+    def night_turn(self):
         log_line = f"The {self.role_hr} ({self.name}) has no night action."
         return log_line
 
-    def death_action(self, players, cause):
+    def death_action(self, cause):
         self.death_info = self.attack_info
         pass
 
-    def hang_action(self, players):
+    def hang_action(self):
         pass
 
     def display_count(self):
         print("Total Players %d" % Player.player_count)
 
-    def win_lose_logic(self, players):
+    def win_lose_logic(self):
         pass
 
 
@@ -55,102 +55,65 @@ class Werewolf(Player):
     and attack as a gestalt
     """
 
-    attacksRemaining = 0
-
-    def __init__(self, name, role_hr):
-        super(Werewolf, self).__init__(name, role_hr)
+    def __init__(self, game, name):
+        super(Werewolf, self).__init__(game, name, "Werewolf")
         self.team = "Dark"
         self.werewolf = True
-        self.night_action_rank = 2.0
+        self.alpha_wolf = False
+        self.pack_rank = 2.0
+        self.night_action_rank = 1.0
         self.purpose = "maul"
 
-    def night_turn(self, players):
-        log_line = wolf_team_turn(players)
-        return log_line
-
-    def win_lose_logic(self, players):
+    def win_lose_logic(self):
         end_state = None
-        livePlayers = [i for i in players if not i.health == 0]
-        if len(find_live_werewolves(players)) == len(livePlayers):
+        if self.game.live_players({"werewolf": True}) == self.game.live_players():
             end_state = (
                 f"The Wolf Team has won by killing all other players!"
-                f"Congratulations, {self.name}!"
+                f" Congratulations, {self.name}!"
             )
         return end_state
 
+    def night_turn(self):
+        log_line = ""
+        if self.alpha_wolf:
+            targets_list = self.game.live_players({"werewolf": False})
+            live_wolf_players = self.game.live_players({"werewolf": True})
+            wolf_names = ",".join([n.name for n in live_wolf_players])
+            msg = f"Ask Werewolf team ({wolf_names}) who they want to maul."
+            target = cmdinterface.target_selector(targets_list, msg, allow_blank=True)
 
-class AlphaWolf(Werewolf):
-    def __init__(self, name):
-        super(AlphaWolf, self).__init__(name, "Alpha Werewolf")
-        self.pack_rank = 1.0
-
-
-class BetaWolf(Werewolf):
-    def __init__(self, name):
-        super(BetaWolf, self).__init__(name, "Beta Werewolf")
-        self.pack_rank = 2.0
-
-
-# Wolf Class helper functions
-def find_live_werewolves(players):
-    live_wolf_players = []
-    for player in players:
-        if not player.health < 1 and hasattr(player, "werewolf"):
-            live_wolf_players.append(player)
-    live_wolf_players = sorted(live_wolf_players, key=lambda wolf: wolf.pack_rank)
-    return live_wolf_players
-
-
-def wolf_team_turn(players):
-    log_line = ""
-    if Werewolf.attacksRemaining > 0:
-        targets_list = []
-        for i in players:
-            if not i.health < 1 and not hasattr(i, "werewolf"):
-                targets_list.append(i)
-
-        live_wolf_players = find_live_werewolves(players)
-        names_string = ",".join([n.name for n in live_wolf_players])
-        msg = f"Ask Werewolf team ({names_string}) who they want to maul."
-        target = cmdinterface.target_selector(targets_list, msg, allow_blank=True)
-
-        if target == "Nobody":
-            log_line = f"The Werewolf team ({names_string}) chose not to maul."
-        elif target.guarded == 1:
-            log_line = (
-                f"The Werewolf team ({names_string}) tried to maul"
-                f" {target.role_hr} ({target.name}),"
-                " but they were protected tonight."
-            )
-        else:
-            target.attacked = 1
-            target.attack_info = {
-                "attacker_name": live_wolf_players[-1].name,
-                "attacker_role": live_wolf_players[-1].role_hr,
-                "attack_cause": live_wolf_players[-1].purpose,
-            }
-            log_line = (
-                f"The Werewolf team ({names_string}) choose to maul"
-                f"{target.role_hr} ({target.name}). \n"
-                f"The attacker was {live_wolf_players[-1].name}."
-            )
-
-        Werewolf.attacksRemaining -= 1
-    return log_line
+            if target == "Nobody":
+                log_line = f"The Werewolf team ({wolf_names}) chose not to maul."
+            elif target.guarded == 1:
+                log_line = (
+                    f"The Werewolf team ({wolf_names}) tried to maul"
+                    f" {target.role_hr} ({target.name}),"
+                    " but they were protected tonight."
+                )
+            else:
+                target.attacked = 1
+                target.attack_info = {
+                    "attacker_name": self.name,
+                    "attacker_role": self.role_hr,
+                    "attack_cause": self.purpose,
+                }
+                log_line = (
+                    f"The Werewolf team ({wolf_names}) choose to maul"
+                    f"{target.role_hr} ({target.name}). \n"
+                    f"The attacker was {self.name}."
+                )
+        return log_line
 
 
 class Fletcher(Player):
-    def __init__(self, name):
-        super(Fletcher, self).__init__(name, "Fletcher")
+    def __init__(self, game, name):
+        super(Fletcher, self).__init__(game, name, "Fletcher")
         self.team = "Light"
         self.night_action_rank = 10.0
         self.purpose = "bestow an arrow upon"
 
-    def night_turn(self, players):
-        targets_list = []
-        for i in players:
-            if not i.health < 1 and i.num_id != self.num_id:
-                targets_list.append(i)
+    def night_turn(self):
+        targets_list = self.game.live_players(filter_out={"id": self.id})
 
         msg = (
             f"Ask the {self.role_hr} ({self.name}) who they would like to"
@@ -173,17 +136,14 @@ class Fletcher(Player):
 
 
 class WitchHunter(Player):
-    def __init__(self, name):
-        super(WitchHunter, self).__init__(name, "Witch Hunter")
+    def __init__(self, game, name):
+        super(WitchHunter, self).__init__(game, name, "Witch Hunter")
         self.team = "Light"
         self.night_action_rank = 9.0
         self.purpose = "inspect"
 
-    def night_turn(self, players):
-        targets_list = []
-        for i in players:
-            if not i.health < 1 and i.num_id != self.num_id:
-                targets_list.append(i)
+    def night_turn(self):
+        targets_list = self.game.live_players(filter_out={"id": self.id})
 
         msg = (
             f"Ask the {self.role_hr} ({self.name}) who they would like to"
@@ -201,11 +161,11 @@ class WitchHunter(Player):
 
 
 class Fool(Player):
-    def __init__(self, name):
-        super(Fool, self).__init__(name, "Fool")
+    def __init__(self, game, name):
+        super(Fool, self).__init__(game, name, "Fool")
         self.team = "Light"
 
-    def win_lose_logic(self, players):
+    def win_lose_logic(self):
         end_state = None
         if self.death_info["attack_cause"] == "hang":
             end_state = (
@@ -216,35 +176,33 @@ class Fool(Player):
 
 
 class Hunter(Player):
-    def __init__(self, name):
-        super(Hunter, self).__init__(name, "Hunter")
+    def __init__(self, game, name):
+        super(Hunter, self).__init__(game, name, "Hunter")
         self.team = "Light"
 
-    def death_action(self, players, cause):
+    def death_action(self, cause):
         """On death, hunter gives self arrow and uses it"""
         self.at_will_day_equip.append(Arrow(self, self))
-        self.at_will_day_equip.arrow.useEquipment(players)
-        self.at_will_day_equip.remove(Arrow)
+        hunter_arrow = self.at_will_day_equip[-1]
+        hunter_arrow.use_equipment()
+        self.at_will_day_equip.remove(hunter_arrow)
 
 
 class Villager(Player):
-    def __init__(self, name):
-        super(Villager, self).__init__(name, "Villager")
+    def __init__(self, game, name):
+        super(Villager, self).__init__(game, name, "Villager")
         self.team = "Light"
 
 
 class WhiteWitch(Player):
-    def __init__(self, name):
-        super(WhiteWitch, self).__init__(name, "White Witch")
+    def __init__(self, game, name):
+        super(WhiteWitch, self).__init__(game, name, "White Witch")
         self.team = "Light"
         self.purpose = "save"
         self.night_action_rank = 6.0
 
-    def night_turn(self, players):
-        targets_list = []
-        for i in players:
-            if i.health > 0 and i.num_id != self.num_id:
-                targets_list.append(i)
+    def night_turn(self):
+        targets_list = self.game.live_players(filter_out={"id": self.id})
 
         """Note: Should they be able to choose no one?"""
         msg = (
@@ -253,13 +211,13 @@ class WhiteWitch(Player):
         )
 
         target = cmdinterface.target_selector(targets_list, msg)
-        target.attacked = 0
-        target.suicided = 0
         if target.attacked == 1 or target.suicided == 1:
+            target.attacked = 0
+            target.suicided = 0
             log_line = (
                 f"The {self.role_hr} ({self.name}) chose to"
                 f" {self.purpose} the {target.role_hr} ({target.name})"
-                "and saved them from bleeding out."
+                " and saved them from bleeding out."
             )
         else:
             log_line = (
@@ -272,14 +230,13 @@ class WhiteWitch(Player):
 
 
 roles_lookup = {
-    "Alpha Wolf": AlphaWolf,
-    "Beta Wolf": BetaWolf,
+    "Werewolf": Werewolf,
+    "Villager": Villager,
     "Fletcher": Fletcher,
+    "Hunter": Hunter,
+    "White Witch": WhiteWitch,
     "Witch Hunter": WitchHunter,
     "Fool": Fool,
-    "Hunter": Hunter,
-    "Villager": Villager,
-    "White Witch": WhiteWitch,
 }
 
 
@@ -287,24 +244,18 @@ roles_lookup = {
 
 
 class Arrow:
-    arrowCount = 0
+    arrow_count = 0
 
     def __init__(self, owner, donor):
+        self.game = owner.game
         self.owner = owner
         self.name = "arrow"
-        self.arrowID = Arrow.arrowCount
+        self.arrowID = Arrow.arrow_count
         self.purpose = "shoot"
-        Arrow.arrowCount += 1
+        Arrow.arrow_count += 1
 
-    def findTargets(self, players):
-        targets_list = []
-        for i in players:
-            if i.health > 0 and i.num_id != self.owner.num_id:
-                targets_list.append(i)
-        return targets_list
-
-    def useEquipment(self, players):
-        targets_list = self.findTargets(players)
+    def use_equipment(self):
+        targets_list = self.game.live_players(filter_out={"id": self.owner.id})
         msg = (
             f"Who did the {self.owner.role_hr} ({self.owner.name})" f" {self.purpose}?"
         )
@@ -312,7 +263,7 @@ class Arrow:
         target = cmdinterface.target_selector(targets_list, msg)
         target.health -= 1
         if target.health == 0:
-            target.death_action(players, self.name)
+            target.death_action(self.name)
             target.death_info = {
                 "attacker_name": self.owner.name,
                 "attacker_role": self.owner.role_hr,
