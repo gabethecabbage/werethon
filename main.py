@@ -31,9 +31,7 @@ class Game(object):
         print(end_state)
         print("End of script")
 
-    def live_players(
-        self, filter_in={}, filter_out={}, sort_var="night_action_rank"
-    ):
+    def live_players(self, filter_in={}, filter_out={}, sort_var="night_action_rank"):
         """Return filtered and sorted list of live players"""
         live_filtered = [p for p in self.players if p.health > 0]
 
@@ -62,9 +60,7 @@ class Game(object):
 
         """Set the highest ranking wolf to alpha if none found"""
         if len(self.live_players({"alpha_wolf": True})) < 1:
-            live_wolf_players = self.live_players(
-                {"werewolf": True}, {}, "pack_rank"
-            )
+            live_wolf_players = self.live_players({"werewolf": True}, {}, "pack_rank")
             live_wolf_players[0].alpha_wolf = True
 
         """for each player, run there night turn"""
@@ -100,7 +96,6 @@ class Game(object):
                 cmdinterface.use_day_equip(self.live_players(), equip_user)
 
         self.day_counter += 1
-
 
     def hanging(self):
         hang_msg = "Select the player the group voted to hang."

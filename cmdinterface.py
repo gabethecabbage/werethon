@@ -75,16 +75,13 @@ def give_player_role_info(player, target, infoType):
         msg = (
             f"You may show the {player.role_hr} ({player.name}) that"
             f" {target.name} is a {target.team} team member"
-
         )
     print(msg)
     return msg
 
 
 def player_inaction_message(player, cause):
-    msg = (
-        f"{player.role_hr} ({player.name}) may not act, they are {cause}"
-    )
+    msg = f"{player.role_hr} ({player.name}) may not act, they are {cause}"
     print(msg)
     return msg
 
@@ -119,6 +116,8 @@ def pick_day_equip_user(players):
 
 
 def use_day_equip(players, equip_user):
-    chosenEquip = target_selector(equip_user.at_will_day_equip, "What equipment did they use?")
+    chosenEquip = target_selector(
+        equip_user.at_will_day_equip, "What equipment did they use?"
+    )
     chosenEquip.use_equipment()
     equip_user.at_will_day_equip.remove(chosenEquip)
