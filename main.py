@@ -82,7 +82,7 @@ class Game(object):
                 p.health -= 1
                 """dock 1 hp per unguarded attack"""
                 if p.health < 1:
-                    p.death_action("Night Attack")
+                    p.death_action()
                     p.death_info = p.attack_info
                     died_in_the_night.append(p)
         """returns a list of the dead and bool of the reveal rule"""
@@ -107,13 +107,13 @@ class Game(object):
         hang_victim = cmdinterface.target_selector(self.live_players(), hang_msg, True)
         if hang_victim != "Nobody":
             hang_victim.health -= 1
+            hang_victim.attack_info = {
+                "attacker_name": "Town",
+                "attacker_role": "Town",
+                "attack_cause": "hang",
+            }
             if hang_victim.health < 1:
-                hang_victim.death_action("hang")
-                hang_victim.death_info = {
-                    "attacker_name": "Town",
-                    "attacker_role": "Town",
-                    "attack_cause": "hang",
-                }
+                hang_victim.death_action()
 
     def win_lose_check(self):
         if len(self.live_players({"team": "Dark"})) == 0:

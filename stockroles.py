@@ -36,7 +36,7 @@ class Player(object):
         log_line = f"The {self.role_hr} ({self.name}) has no night action."
         return log_line
 
-    def death_action(self, cause):
+    def death_action(self):
         self.death_info = self.attack_info
         print(self.death_info)
         logging.info(
@@ -172,8 +172,9 @@ class Hunter(Player):
         super(Hunter, self).__init__(game, name, "Hunter")
         self.team = "Light"
 
-    def death_action(self, cause):
+    def death_action(self):
         """On death, hunter gives self arrow and uses it"""
+        self.death_info = self.attack_info
         self.at_will_day_equip.append(Arrow(self, self))
         hunter_arrow = self.at_will_day_equip[-1]
         hunter_arrow.use_equipment()
@@ -256,10 +257,10 @@ class Arrow:
 
         target = cmdinterface.target_selector(targets_list, msg)
         target.health -= 1
+        target.attack_info = {
+            "attacker_name": self.owner.name,
+            "attacker_role": self.owner.role_hr,
+            "attack_cause": self.purpose,
+        }
         if target.health == 0:
-            target.death_action(self.name)
-            target.death_info = {
-                "attacker_name": self.owner.name,
-                "attacker_role": self.owner.role_hr,
-                "attack_cause": self.purpose,
-            }
+            target.death_action()
