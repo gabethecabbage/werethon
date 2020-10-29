@@ -32,9 +32,9 @@ def player_name_entry(player_count):
 
 
 def simple_player_info(playerObj):
-    print("Nickname: %s" % playerObj.name)
-    print("Role: %s" % playerObj.role_hr)
-    print("Health: %s" % playerObj.health)
+    print(f"Nickname: {playerObj.name}")
+    print(f"Role: {playerObj.role_hr}")
+    print(f"Health: {playerObj.health}")
     print("------------------------------------")
 
 
