@@ -33,12 +33,10 @@ class Player(object):
         Player.id_counter += 1
 
     def night_turn(self):
-        log_line = f"The {self.role_hr} ({self.name}) has no night action."
-        return log_line
+        pass
 
     def death_action(self):
         self.death_info = self.attack_info
-        print(self.death_info)
         logging.info(
             f"{self.role_hr} ({self.name}) was killed by "
             f"{self.death_info['attacker_role']} ({self.death_info['attacker_name']})"
@@ -46,9 +44,6 @@ class Player(object):
 
     def hang_action(self):
         pass
-
-    def display_count(self):
-        print("Total Players %d" % Player.player_count)
 
     def win_lose_logic(self):
         end_state = None
