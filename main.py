@@ -5,15 +5,17 @@ import random
 import stockroles
 import time
 import cmdinterface
+import logging
 
 
 class Game(object):
     def __init__(self, player_names, role_names, reveal):
-        self.log = LogManager()
+        log_file_name = f"log/log-{int(time.time())}.txt"
+        logging.basicConfig(filename=log_file_name, level=logging.INFO)
         self.reveal = reveal
-
         self.player_names = player_names
         self.role_names = random.shuffle(role_names)
+        self.day_counter = 0
 
         self.players = []
         for role, name in zip(role_names, player_names):
@@ -26,7 +28,6 @@ class Game(object):
         end_state = self.day_night_cycle(reveal)
         for obj in self.players:
             cmdinterface.simple_player_info(obj)
-        self.log.f.close()
         print(end_state)
         print("End of script")
 
@@ -50,8 +51,7 @@ class Game(object):
 
     def night_phase(self, reveal):
         """Cycle through the night turns"""
-        self.log.add_log_line("The Night has started")
-        self.log.add_log_line(":::::::::::::::::::::")
+        logging.info(f"Night {self.day_counter + 1} has started")
 
         """Reset any night only attributes"""
         for p in self.live_players():
@@ -71,14 +71,9 @@ class Game(object):
         for p in self.players:
             """checks the player can use their night turn"""
             if p.blocked == 1:
-                log_line = cmdinterface.player_inaction_message(p, "blocked")
-            elif p.health < 1:
-                log_line = cmdinterface.player_inaction_message(p, "dead")
+                logging.info(cmdinterface.player_inaction_message(p, "blocked"))
             else:
-                log_line = p.night_turn()
-            self.log.add_log_line(log_line)
-            print(":-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:-:")
-        self.log.add_log_line(":::::::::::::::::::::")
+                p.night_turn()
 
         """Check for Deaths"""
         died_in_the_night = []
@@ -97,10 +92,15 @@ class Game(object):
         died_in_the_day = []
         equip_user = None
 
+        logging.info(f"Day {self.day_counter + 1} started")
+
         while equip_user != "Nobody":
             equip_user = cmdinterface.pick_day_equip_user(self.live_players())
             if equip_user != "Nobody":
                 cmdinterface.use_day_equip(self.live_players(), equip_user)
+
+        self.day_counter += 1
+
 
     def hanging(self):
         hang_msg = "Select the player the group voted to hang."
@@ -122,6 +122,7 @@ class Game(object):
         for p in self.players:
             end_state = p.win_lose_logic()
             if end_state is not None:
+                logging.info(end_state)
                 return end_state
         return None
 
@@ -143,21 +144,6 @@ class Game(object):
                 break
 
         return end_state
-
-
-class LogManager(object):
-    line_count = 0
-
-    def __init__(self):
-        log_file_name = "log/log-%d.txt" % int(time.time())
-        """create a log file in the log directory with a file name appended
-        with the current unix time"""
-        self.f = open(log_file_name, "w")
-
-    def add_log_line(self, msg):
-        self.f.write(str(LogManager.line_count) + ":    " + msg + "\n")
-        LogManager.line_count += 1
-        self.lastMsg = msg
 
 
 test_player_names = ["Gabe", "Dowd", "Tom", "Becca", "Onslow", "Andy"]

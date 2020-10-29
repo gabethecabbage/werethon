@@ -1,5 +1,6 @@
 __author__ = "gabe"
 import cmdinterface
+import logging
 
 
 class Player(object):
@@ -37,7 +38,11 @@ class Player(object):
 
     def death_action(self, cause):
         self.death_info = self.attack_info
-        pass
+        print(self.death_info)
+        logging.info(
+            f"{self.role_hr} ({self.name}) was killed by "
+            f"{self.death_info['attacker_role']} ({self.death_info['attacker_name']})"
+        )
 
     def hang_action(self):
         pass
@@ -68,13 +73,12 @@ class Werewolf(Player):
         end_state = None
         if self.game.live_players({"werewolf": True}) == self.game.live_players():
             end_state = (
-                f"The Wolf Team has won by killing all other players!"
+                f"Werewolf Team has won by killing all other players!"
                 f" Congratulations, {self.name}!"
             )
         return end_state
 
     def night_turn(self):
-        log_line = ""
         if self.alpha_wolf:
             targets_list = self.game.live_players({"werewolf": False})
             live_wolf_players = self.game.live_players({"werewolf": True})
@@ -83,13 +87,7 @@ class Werewolf(Player):
             target = cmdinterface.target_selector(targets_list, msg, allow_blank=True)
 
             if target == "Nobody":
-                log_line = f"The Werewolf team ({wolf_names}) chose not to maul."
-            elif target.guarded == 1:
-                log_line = (
-                    f"The Werewolf team ({wolf_names}) tried to maul"
-                    f" {target.role_hr} ({target.name}),"
-                    " but they were protected tonight."
-                )
+                logging.info(f"Werewolf team ({wolf_names}) chose to maul nobody")
             else:
                 target.attacked = 1
                 target.attack_info = {
@@ -97,12 +95,11 @@ class Werewolf(Player):
                     "attacker_role": self.role_hr,
                     "attack_cause": self.purpose,
                 }
-                log_line = (
-                    f"The Werewolf team ({wolf_names}) choose to maul"
-                    f"{target.role_hr} ({target.name}). \n"
-                    f"The attacker was {self.name}."
+                logging.info(
+                    f"Werewolf team ({wolf_names}) maul"
+                    f" the {target.role_hr} ({target.name})."
+                    f" The attacker was {self.name}."
                 )
-        return log_line
 
 
 class Fletcher(Player):
@@ -122,17 +119,13 @@ class Fletcher(Player):
         target = cmdinterface.target_selector(targets_list, msg, allow_blank=True)
 
         if target == "Nobody":
-            log_line = (
-                f"The {self.role_hr} ({self.name}) chose to"
-                f"{self.purpose} nobody, how dull..."
-            )
+            logging.info(f"{self.role_hr} ({self.name}) chose to {self.purpose} nobody")
         else:
             target.at_will_day_equip.append(Arrow(target, self))
-            log_line = (
-                f"The {self.role_hr} ({self.name}) chose to"
-                f"{self.purpose} the {target.role_hr} ({target.name})."
+            logging.info(
+                f"{self.role_hr} ({self.name}) chose to {self.purpose} the"
+                f" {target.role_hr} ({target.name})."
             )
-        return log_line
 
 
 class WitchHunter(Player):
@@ -153,11 +146,10 @@ class WitchHunter(Player):
         target = cmdinterface.target_selector(targets_list, msg)
         cmdinterface.give_player_role_info(self, target, "team")
 
-        log_line = (
+        logging.info(
             f"The {self.role_hr} ({self.name}) chose to {self.purpose}"
             f" the {target.role_hr} ({target.name})."
         )
-        return log_line
 
 
 class Fool(Player):
@@ -169,8 +161,8 @@ class Fool(Player):
         end_state = None
         if self.death_info["attack_cause"] == "hang":
             end_state = (
-                f"The {self.role_hr} has won by convincing the village"
-                f" to Lynch him! Congratulations, {self.name}!"
+                f"The {self.role_hr} has won by convincing the village to Lynch"
+                f" him! Congratulations, {self.name}!"
             )
         return end_state
 
@@ -186,6 +178,10 @@ class Hunter(Player):
         hunter_arrow = self.at_will_day_equip[-1]
         hunter_arrow.use_equipment()
         self.at_will_day_equip.remove(hunter_arrow)
+        logging.info(
+            f"{self.role_hr} ({self.name}) was killed by "
+            f"{self.death_info['attacker_role']} ({self.death_info['attacker_name']})"
+        )
 
 
 class Villager(Player):
@@ -214,19 +210,17 @@ class WhiteWitch(Player):
         if target.attacked == 1 or target.suicided == 1:
             target.attacked = 0
             target.suicided = 0
-            log_line = (
-                f"The {self.role_hr} ({self.name}) chose to"
+            logging.info(
+                f"{self.role_hr} ({self.name}) chose to"
                 f" {self.purpose} the {target.role_hr} ({target.name})"
                 " and saved them from bleeding out."
             )
         else:
-            log_line = (
-                f"The {self.role_hr} ({self.name}) chose to"
+            logging.info(
+                f"{self.role_hr} ({self.name}) chose to"
                 f" {self.purpose} the {target.role_hr} ({target.name})"
                 " but they were fine."
             )
-
-        return log_line
 
 
 roles_lookup = {
