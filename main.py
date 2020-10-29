@@ -68,7 +68,7 @@ class Game(object):
             live_wolf_players[0].alpha_wolf = True
 
         """for each player, run there night turn"""
-        for p in self.players:
+        for p in self.live_players():
             """checks the player can use their night turn"""
             if p.blocked == 1:
                 logging.info(cmdinterface.player_inaction_message(p, "blocked"))
@@ -77,7 +77,7 @@ class Game(object):
 
         """Check for Deaths"""
         died_in_the_night = []
-        for p in self.players:
+        for p in self.live_players():
             if p.attacked >= 1 and p.guarded == 0:
                 p.health -= 1
                 """dock 1 hp per unguarded attack"""
