@@ -116,9 +116,7 @@ class Game(object):
                 hang_victim.death_action()
 
     def win_lose_check(self):
-        if len(self.live_players({"team": "Dark"})) == 0:
-            end_state = "The Village has won by killing all the Dark forces!"
-            return end_state
+
         for p in self.players:
             end_state = p.win_lose_logic()
             if end_state is not None:

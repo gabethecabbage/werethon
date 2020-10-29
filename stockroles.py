@@ -51,7 +51,10 @@ class Player(object):
         print("Total Players %d" % Player.player_count)
 
     def win_lose_logic(self):
-        pass
+        end_state = None
+        if self.team == "Light" and len(self.game.live_players({"team": "Dark"})) == 0:
+            end_state = "The Light team won by killing all the Dark forces!"
+        return end_state
 
 
 class Werewolf(Player):
