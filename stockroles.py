@@ -38,7 +38,7 @@ class Player(object):
     def death_action(self):
         self.death_info = self.attack_info
         logging.info(
-            f"{self.role_hr} ({self.name}) was killed by "
+            f"{self.role_hr} ({self.name}) was killed ({self.death_info['attack_cause']}) by "
             f"{self.death_info['attacker_role']} ({self.death_info['attacker_name']})"
         )
 
@@ -91,7 +91,7 @@ class Werewolf(Player):
                 target.attack_info = {
                     "attacker_name": self.name,
                     "attacker_role": self.role_hr,
-                    "attack_cause": self.purpose,
+                    "attack_cause": "mauled",
                 }
                 logging.info(
                     f"Werewolf team ({wolf_names}) maul"
@@ -178,7 +178,7 @@ class Hunter(Player):
         hunter_arrow.use_equipment()
         self.at_will_day_equip.remove(hunter_arrow)
         logging.info(
-            f"{self.role_hr} ({self.name}) was killed by "
+            f"{self.role_hr} ({self.name}) was killed ({self.death_info['attack_cause']}) by "
             f"{self.death_info['attacker_role']} ({self.death_info['attacker_name']})"
         )
 
@@ -258,7 +258,7 @@ class Arrow:
         target.attack_info = {
             "attacker_name": self.owner.name,
             "attacker_role": self.owner.role_hr,
-            "attack_cause": self.purpose,
+            "attack_cause": "shot",
         }
         if target.health == 0:
             target.death_action()

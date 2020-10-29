@@ -105,7 +105,7 @@ class Game(object):
             hang_victim.attack_info = {
                 "attacker_name": "Town",
                 "attacker_role": "Town",
-                "attack_cause": "hang",
+                "attack_cause": "hung",
             }
             if hang_victim.health < 1:
                 hang_victim.death_action()
