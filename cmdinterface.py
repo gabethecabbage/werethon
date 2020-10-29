@@ -75,13 +75,16 @@ def give_player_role_info(player, target, infoType):
         msg = (
             f"You may show the {player.role_hr} ({player.name}) that"
             f" {target.name} is a {target.team} team member"
+
         )
     print(msg)
     return msg
 
 
 def player_inaction_message(player, cause):
-    msg = f"{player.role_hr} ({player.name}) may not act, they are {cause}"
+    msg = (
+        f"{player.role_hr} ({player.name}) may not act, they are {cause}"
+    )
     print(msg)
     return msg
 
@@ -96,7 +99,6 @@ def night_death_message(listOfDead, reveal):
                 print(i.name)
     else:
         print("There were no deaths this night")
-    print(":::::::::::::::::::::::::::::::::::")
 
 
 def pick_day_equip_user(players):
@@ -108,7 +110,7 @@ def pick_day_equip_user(players):
         msg = (
             "The following players have equipment.\n"
             "Select a player if they use anything"
-            "(or Nobody to progress to the voting)."
+            " (or Nobody to progress to the voting)."
         )
         equip_user = target_selector(equip_players, msg, True)
         return equip_user
@@ -117,7 +119,6 @@ def pick_day_equip_user(players):
 
 
 def use_day_equip(players, equip_user):
-    print("What equipment did they use?")
-    chosenEquip = target_selector(equip_user.at_will_day_equip, ":::::::::")
+    chosenEquip = target_selector(equip_user.at_will_day_equip, "What equipment did they use?")
     chosenEquip.use_equipment()
     equip_user.at_will_day_equip.remove(chosenEquip)
