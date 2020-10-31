@@ -31,14 +31,10 @@ def player_name_entry(player_count):
 """
 
 
-def target_selector(targets_list, msg=":::::::::", allow_blank=False):
+def target_selector(targets_list, msg=":::::::::"):
     print(msg)
     for i in range(len(targets_list)):
         print(str(i) + ": " + targets_list[i].name)
-    if allow_blank:
-        i = len(targets_list)
-        print(str(i) + ": Nobody")
-        targets_list.append("Nobody")
     t = int(input("Select the corresponding number: "))
     return targets_list[t]
 
@@ -89,28 +85,3 @@ def night_death_message(listOfDead, reveal):
                 print(i.name)
     else:
         print("There were no deaths this night")
-
-
-def pick_day_equip_user(players):
-    equip_players = []
-    for player in players:
-        if len(player.at_will_day_equip) > 0 and player.health > 0:
-            equip_players.append(player)
-    if len(equip_players) > 0:
-        msg = (
-            "The following players have equipment.\n"
-            "Select a player if they use anything"
-            " (or Nobody to progress to the voting)."
-        )
-        equip_user = target_selector(equip_players, msg, True)
-        return equip_user
-    else:
-        return "Nobody"
-
-
-def use_day_equip(players, equip_user):
-    chosenEquip = target_selector(
-        equip_user.at_will_day_equip, "What equipment did they use?"
-    )
-    chosenEquip.use_equipment()
-    equip_user.at_will_day_equip.remove(chosenEquip)

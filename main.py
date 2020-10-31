@@ -31,11 +31,11 @@ class Game(object):
         print(end_state)
         print("End of script")
 
-    def live_players(self, filter_in={}, filter_out={}, sort_var="night_action_rank"):
+    def live_players(self, filter_inc={}, filter_out={}, sort_var="night_action_rank"):
         """Return filtered and sorted list of live players"""
         live_filtered = [p for p in self.players if p.health > 0]
 
-        for key, value in filter_in.items():
+        for key, value in filter_inc.items():
             live_filtered = [
                 p for p in live_filtered if getattr(p, key, False) == value
             ]
@@ -85,22 +85,32 @@ class Game(object):
         cmdinterface.night_death_message(died_in_the_night, reveal)
 
     def day_phase(self, reveal):
-        died_in_the_day = []
-        equip_user = None
-
         logging.info(f"Day {self.day_counter + 1} started")
+        equip_user = None
+        null_plyr = stockroles.Player(self, "Nobody", "")
+        equip_players = self.live_players({}, {"at_will_day_equip": []}) + [null_plyr]
 
-        while equip_user != "Nobody":
-            equip_user = cmdinterface.pick_day_equip_user(self.live_players())
-            if equip_user != "Nobody":
-                cmdinterface.use_day_equip(self.live_players(), equip_user)
-
-        self.day_counter += 1
+        while equip_user != null_plyr and equip_players != [null_plyr]:
+            msg = (
+                "The following players have equipment.\n"
+                "Select a player if they use anything "
+                "(or Nobody to progress to the voting)."
+            )
+            equip_user = cmdinterface.target_selector(equip_players, msg)
+            if equip_user != null_plyr:
+                chosenEquip = cmdinterface.target_selector(
+                    equip_user.at_will_day_equip, "What equipment did they use?"
+                )
+                chosenEquip.use_equipment()
+                equip_user.at_will_day_equip.remove(chosenEquip)
 
     def hanging(self):
         hang_msg = "Select the player the group voted to hang."
-        hang_victim = cmdinterface.target_selector(self.live_players(), hang_msg, True)
-        if hang_victim != "Nobody":
+        null_plyr =  stockroles.Player(self, "Nobody", "")
+        hang_targets = self.live_players() + [null_plyr]
+        hang_victim = cmdinterface.target_selector(hang_targets, hang_msg)
+
+        if hang_victim != null_plyr:
             hang_victim.health -= 1
             hang_victim.attack_info = {
                 "attacker_name": "Town",
@@ -135,6 +145,8 @@ class Game(object):
             end_state = self.win_lose_check()
             if end_state is not None:
                 break
+
+            self.day_counter += 1
 
         return end_state
 

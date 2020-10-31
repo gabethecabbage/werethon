@@ -41,6 +41,9 @@ class Player(object):
         )
         return info
 
+    def night_targets(self):
+        return []
+
     def night_turn(self):
         pass
 
@@ -85,15 +88,19 @@ class Werewolf(Player):
             )
         return end_state
 
+    def night_targets(self):
+        null_plyr = Player(self.game, "Nobody", "")
+        targets = self.game.live_players({"werewolf": False}) + [null_plyr]
+        return targets
+
     def night_turn(self):
         if self.alpha_wolf:
-            targets_list = self.game.live_players({"werewolf": False})
             live_wolf_players = self.game.live_players({"werewolf": True})
-            wolf_names = ",".join([n.name for n in live_wolf_players])
+            wolf_names = ", ".join([n.name for n in live_wolf_players])
             msg = f"Ask Werewolf team ({wolf_names}) who they want to maul."
-            target = cmdinterface.target_selector(targets_list, msg, allow_blank=True)
+            target = cmdinterface.target_selector(self.night_targets(), msg)
 
-            if target == "Nobody":
+            if target.name == "Nobody":
                 logging.info(f"Werewolf team ({wolf_names}) chose to maul nobody")
             else:
                 target.attacked = 1
@@ -103,8 +110,7 @@ class Werewolf(Player):
                     "attack_cause": "mauled",
                 }
                 logging.info(
-                    f"Werewolf team ({wolf_names}) maul"
-                    f" the {target.role_hr} ({target.name})."
+                    f"Werewolf team ({wolf_names}) maul the {target.role_hr} ({target.name})."
                     f" The attacker was {self.name}."
                 )
 
@@ -116,16 +122,19 @@ class Fletcher(Player):
         self.night_action_rank = 10.0
         self.purpose = "bestow an arrow upon"
 
-    def night_turn(self):
-        targets_list = self.game.live_players(filter_out={"id": self.id})
+    def night_targets(self):
+        null_plyr = Player(self.game, "Nobody", "")
+        targets = self.game.live_players({}, {"id": self.id}) + [null_plyr]
+        return targets
 
+    def night_turn(self):
         msg = (
             f"Ask the {self.role_hr} ({self.name}) who they would like to"
             f" {self.purpose}."
         )
-        target = cmdinterface.target_selector(targets_list, msg, allow_blank=True)
+        target = cmdinterface.target_selector(self.night_targets(), msg)
 
-        if target == "Nobody":
+        if target.name == "Nobody":
             logging.info(f"{self.role_hr} ({self.name}) chose to {self.purpose} nobody")
         else:
             target.at_will_day_equip.append(Arrow(target, self))
@@ -142,15 +151,17 @@ class WitchHunter(Player):
         self.night_action_rank = 9.0
         self.purpose = "inspect"
 
-    def night_turn(self):
-        targets_list = self.game.live_players(filter_out={"id": self.id})
+    def night_targets(self):
+        targets = self.game.live_players({}, {"id": self.id})
+        return targets
 
+    def night_turn(self):
         msg = (
             f"Ask the {self.role_hr} ({self.name}) who they would like to"
             f" {self.purpose}."
         )
+        target = cmdinterface.target_selector(self.night_targets(), msg)
 
-        target = cmdinterface.target_selector(targets_list, msg)
         cmdinterface.give_player_role_info(self, target, "team")
 
         logging.info(
@@ -205,16 +216,17 @@ class WhiteWitch(Player):
         self.purpose = "save"
         self.night_action_rank = 6.0
 
-    def night_turn(self):
-        targets_list = self.game.live_players(filter_out={"id": self.id})
+    def night_targets(self):
+        targets = self.game.live_players({}, {"id": self.id})
+        return targets
 
-        """Note: Should they be able to choose no one?"""
+    def night_turn(self):
         msg = (
             f"Ask the {self.role_hr} ({self.name}) who they would like to"
             f" {self.purpose}."
         )
 
-        target = cmdinterface.target_selector(targets_list, msg)
+        target = cmdinterface.target_selector(self.night_targets(), msg)
         if target.attacked == 1 or target.suicided == 1:
             target.attacked = 0
             target.suicided = 0
