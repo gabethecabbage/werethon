@@ -31,13 +31,6 @@ def player_name_entry(player_count):
 """
 
 
-def simple_player_info(playerObj):
-    print(f"Nickname: {playerObj.name}")
-    print(f"Role: {playerObj.role_hr}")
-    print(f"Health: {playerObj.health}")
-    print("------------------------------------")
-
-
 def target_selector(targets_list, msg=":::::::::", allow_blank=False):
     print(msg)
     for i in range(len(targets_list)):

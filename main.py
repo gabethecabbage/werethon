@@ -23,11 +23,11 @@ class Game(object):
         """Sort players by their night rank attribute"""
         self.players.sort(key=lambda x: x.night_action_rank)
 
-        for obj in self.players:
-            cmdinterface.simple_player_info(obj)
+        for plyr in self.players:
+            print(plyr)
         end_state = self.day_night_cycle(reveal)
-        for obj in self.players:
-            cmdinterface.simple_player_info(obj)
+        for plyr in self.players:
+            print(plyr)
         print(end_state)
         print("End of script")
 

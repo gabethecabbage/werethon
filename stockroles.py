@@ -32,6 +32,15 @@ class Player(object):
 
         Player.id_counter += 1
 
+    def __str__(self):
+        info = (
+            f"Nickname: {self.name}\n"
+            f"Role: {self.role_hr}\n"
+            f"Health: {self.health}\n"
+            "------------------------------------"
+        )
+        return info
+
     def night_turn(self):
         pass
 
